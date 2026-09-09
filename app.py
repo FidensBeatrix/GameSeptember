@@ -2,11 +2,9 @@ import json
 import streamlit as st
 import streamlit.components.v1 as components
 
-
 # ============================================================
 # PAGE CONFIG
 # ============================================================
-
 st.set_page_config(
     page_title="Testign Game",
     page_icon="🔵",
@@ -14,17 +12,13 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-
 # ============================================================
 # LOGIN
 # ============================================================
-
 def check_credentials(username: str, password: str) -> bool:
     """
     Credentials are stored in Streamlit Secrets.
-
     Example:
-
     [auth.users]
     Tester1 = "Blue"
     """
@@ -34,129 +28,98 @@ def check_credentials(username: str, password: str) -> bool:
     except Exception:
         return False
 
-
 def show_login():
-
     st.markdown(
         """
         <style>
-
         [data-testid="stSidebar"] {
             display: none;
         }
-
         .block-container {
             padding-top: 2.2rem;
             max-width: 920px;
         }
-
         .login-title {
             font-size: 2rem;
             font-weight: 800;
             margin-bottom: .15rem;
         }
-
         .login-sub {
             opacity: .72;
             margin-bottom: 1rem;
         }
-
         </style>
         """,
         unsafe_allow_html=True,
     )
-
     left, right = st.columns(
         [1.35, 1],
         vertical_alignment="center"
     )
-
     with left:
-
         st.markdown(
             '<div class="login-title">🔵 Testign Game</div>',
             unsafe_allow_html=True,
         )
-
         st.markdown(
             '<div class="login-sub">'
             'For the game to begin please sign in'
             '</div>',
             unsafe_allow_html=True,
         )
-
         with st.form(
             "login_form",
             clear_on_submit=False
         ):
-
             username = st.text_input(
                 "Username",
                 placeholder="Username"
             )
-
             password = st.text_input(
                 "Password",
                 type="password",
                 placeholder="Password"
             )
-
             submitted = st.form_submit_button(
                 "LOGIN",
                 use_container_width=True
             )
-
         if submitted:
-
             if check_credentials(username, password):
-
                 st.session_state["authenticated"] = True
                 st.session_state["username"] = username
-
                 st.rerun()
-
             else:
-
                 st.error(
                     "🦖 RAWR... wrong username or password. "
                     "No castle hunting for impostors."
                 )
-
     with right:
-
         try:
             st.image(
                 "RATeamLogo.png",
                 use_container_width=True
             )
-
         except Exception:
-
             st.info(
                 "Add **RATeamLogo.png** to the same "
                 "GitHub folder as `app.py`."
             )
-
     st.stop()
-
 
 if not st.session_state.get(
     "authenticated",
     False
 ):
-
     show_login()
-
 
 # ============================================================
 # LOGGED-IN HEADER
 # ============================================================
-
 head_left, head_right = st.columns(
     [5, 1],
     vertical_alignment="center"
 )
-
 with head_left:
 
     st.caption(
@@ -164,131 +127,85 @@ with head_left:
         f"**{st.session_state.get('username', '')}**"
     )
 
-
 with head_right:
-
     if st.button(
         "Log out",
         use_container_width=True
     ):
-
         st.session_state.clear()
-
         st.rerun()
-
-
 # ============================================================
 # GAME
 # ============================================================
-
 GAME_HTML = r"""
-
 <div id="ks-root" tabindex="0">
-
 <style>
-
 #ks-root {
-
     width: 100%;
-
     outline: none;
-
     color: #f8fafc;
-
     font-family:
         Arial,
         Helvetica,
         sans-serif;
 }
-
-
 #ks-wrap {
-
     max-width: 1050px;
-
     margin: 0 auto;
 }
-
 
 /* =========================
    INTRO
    ========================= */
-
 #intro-panel {
-
     max-width: 820px;
-
     margin:
         28px auto
         18px auto;
-
     padding:
         30px 34px;
-
     border:
         2px solid
         #7c3aed;
-
     border-radius:
         14px;
-
     background:
         #111827;
-
     text-align:
         center;
-
     line-height:
         1.65;
-
     font-size:
         17px;
 }
-
-
 #intro-title {
-
     color:
         #ffd166;
-
     font-size:
         27px;
-
     font-weight:
         900;
-
     margin-bottom:
         18px;
 }
-
-
 #intro-text {
-
     color:
         #f8fafc;
-
     font-size:
         17px;
 }
 
-
 #start-game {
-
     margin-top:
         22px;
-
     min-width:
         210px;
-
     border:
         0;
-
     border-radius:
         9px;
-
     padding:
         12px 18px;
-
     font-size:
         16px;
 
@@ -305,14 +222,11 @@ GAME_HTML = r"""
         pointer;
 }
 
-
 #start-game:hover {
 
     background:
         #5b21b6;
 }
-
-
 
 /* =========================
    GAME HEADER
@@ -327,7 +241,6 @@ GAME_HTML = r"""
         2px 0
         8px 0;
 }
-
 
 #ks-title {
 
@@ -344,7 +257,6 @@ GAME_HTML = r"""
         .5px;
 }
 
-
 #ks-status {
 
     font-size:
@@ -356,7 +268,6 @@ GAME_HTML = r"""
     margin-top:
         4px;
 }
-
 
 #ks-letters {
 
@@ -379,8 +290,6 @@ GAME_HTML = r"""
         6px;
 }
 
-
-
 /* =========================
    GAME CANVAS
    ========================= */
@@ -399,7 +308,6 @@ GAME_HTML = r"""
     overflow:
         hidden;
 }
-
 
 #game {
 
@@ -435,8 +343,6 @@ GAME_HTML = r"""
         auto;
 }
 
-
-
 /* =========================
    BUTTONS
    ========================= */
@@ -461,7 +367,6 @@ GAME_HTML = r"""
     flex-wrap:
         wrap;
 }
-
 
 #controls button {
 
@@ -493,13 +398,11 @@ GAME_HTML = r"""
         pointer;
 }
 
-
 #controls button:hover {
 
     background:
         #5b21b6;
 }
-
 
 #help {
 
@@ -515,8 +418,6 @@ GAME_HTML = r"""
     font-size:
         12px;
 }
-
-
 
 /* =========================
    GUESS PANEL
@@ -550,7 +451,6 @@ GAME_HTML = r"""
         center;
 }
 
-
 #guess-panel h3 {
 
     margin:
@@ -559,7 +459,6 @@ GAME_HTML = r"""
     color:
         #ffd166;
 }
-
 
 #guess-panel input {
 
@@ -589,7 +488,6 @@ GAME_HTML = r"""
         center;
 }
 
-
 #guess-panel button {
 
     margin-left:
@@ -617,7 +515,6 @@ GAME_HTML = r"""
         pointer;
 }
 
-
 #guess-feedback {
 
     min-height:
@@ -629,8 +526,6 @@ GAME_HTML = r"""
     font-weight:
         800;
 }
-
-
 
 @media (max-width: 700px) {
 
@@ -668,10 +563,7 @@ GAME_HTML = r"""
 
 </style>
 
-
-
 <div id="ks-wrap">
-
 
 <!-- ======================================================
      INTRO SCREEN
@@ -702,14 +594,11 @@ GAME_HTML = r"""
 
     </div>
 
-
     <button id="start-game">
         START GAME
     </button>
 
 </div>
-
-
 
 <!-- ======================================================
      GAME AREA
@@ -719,7 +608,6 @@ GAME_HTML = r"""
     id="game-area"
     style="display:none;"
 >
-
 
 <div id="ks-header">
 
@@ -735,16 +623,12 @@ GAME_HTML = r"""
 
 </div>
 
-
-
 <div id="game-shell">
 
     <canvas id="game">
     </canvas>
 
 </div>
-
-
 
 <div id="controls">
 
@@ -758,8 +642,6 @@ GAME_HTML = r"""
 
 </div>
 
-
-
 <div id="help">
 
     Move with Arrow Keys or WASD
@@ -768,8 +650,6 @@ GAME_HTML = r"""
     • Blue portal = OUT
 
 </div>
-
-
 
 <div id="guess-panel">
 
@@ -806,17 +686,13 @@ GAME_HTML = r"""
 
 </div>
 
-
 </div>
 
 </div>
-
-
 
 <script>
 
 (() => {
-
 
 /* ============================================================
    SETUP
@@ -827,29 +703,22 @@ const ROOT =
         "ks-root"
     );
 
-
 if (
     ROOT.dataset.ready === "1"
 ) {
     return;
 }
 
-
 ROOT.dataset.ready = "1";
-
 
 const WORD =
     "TESTING";
 
-
 const CELL =
     30;
 
-
 const SPEED =
     135;
-
-
 
 /* ============================================================
    MAZE
@@ -909,22 +778,17 @@ const MAZE_STR = [
 
 ];
 
-
 const MAZE =
     MAZE_STR.map(
         row =>
             [...row].map(Number)
     );
 
-
 const ROWS =
     MAZE.length;
 
-
 const COLS =
     MAZE[0].length;
-
-
 
 /* ============================================================
    START POSITIONS
@@ -933,11 +797,8 @@ const COLS =
 const PLAYER_START =
     [23, 2];
 
-
 const DINO_START =
     [1, 39];
-
-
 
 /* ============================================================
    PORTALS
@@ -969,8 +830,6 @@ const PORTALS = {
 
 };
 
-
-
 /* ============================================================
    CASTLES
    ============================================================ */
@@ -993,8 +852,6 @@ const CASTLE_POSITIONS = [
 
 ];
 
-
-
 /* ============================================================
    HTML ELEMENTS
    ============================================================ */
@@ -1004,82 +861,66 @@ const canvas =
         "game"
     );
 
-
 const ctx =
     canvas.getContext(
         "2d"
     );
 
-
 canvas.width =
     COLS * CELL;
 
-
 canvas.height =
     ROWS * CELL;
-
-
 
 const statusEl =
     document.getElementById(
         "ks-status"
     );
 
-
 const lettersEl =
     document.getElementById(
         "ks-letters"
     );
-
 
 const guessPanel =
     document.getElementById(
         "guess-panel"
     );
 
-
 const guessInput =
     document.getElementById(
         "guess-input"
     );
-
 
 const guessButton =
     document.getElementById(
         "guess-button"
     );
 
-
 const guessFeedback =
     document.getElementById(
         "guess-feedback"
     );
-
 
 const foundLetters =
     document.getElementById(
         "found-letters"
     );
 
-
 const introPanel =
     document.getElementById(
         "intro-panel"
     );
-
 
 const gameArea =
     document.getElementById(
         "game-area"
     );
 
-
 const startGameButton =
     document.getElementById(
         "start-game"
     );
-
-
 
 /* ============================================================
    GAME VARIABLES
@@ -1088,35 +929,26 @@ const startGameButton =
 let timer =
     null;
 
-
 let guessTimer =
     null;
-
 
 let state =
     {};
 
-
 let fireworks =
     [];
-
 
 let fireworkFrame =
     0;
 
-
 let fireworkTimer =
     null;
-
 
 let openingCountdownTimer =
     null;
 
-
 let openingCountdownFinish =
     null;
-
-
 
 /* ============================================================
    UTILITIES
@@ -1130,13 +962,10 @@ function keyOf(pos) {
 
 }
 
-
-
 function shuffle(arr) {
 
     const a =
         [...arr];
-
 
     for (
         let i =
@@ -1153,7 +982,6 @@ function shuffle(arr) {
                 (i + 1)
             );
 
-
         [
             a[i],
             a[j]
@@ -1164,12 +992,9 @@ function shuffle(arr) {
 
     }
 
-
     return a;
 
 }
-
-
 
 /* ============================================================
    RESET
@@ -1189,7 +1014,6 @@ function resetGame(
             null;
     }
 
-
     if (guessTimer) {
 
         clearTimeout(
@@ -1199,7 +1023,6 @@ function resetGame(
         guessTimer =
             null;
     }
-
 
     if (openingCountdownTimer) {
 
@@ -1211,7 +1034,6 @@ function resetGame(
             null;
     }
 
-
     if (openingCountdownFinish) {
 
         clearTimeout(
@@ -1222,19 +1044,15 @@ function resetGame(
             null;
     }
 
-
     stopFireworks();
-
 
     const shuffled =
         shuffle(
             [...WORD]
         );
 
-
     const letterMap =
         {};
-
 
     CASTLE_POSITIONS.forEach(
         (p, i) => {
@@ -1245,7 +1063,6 @@ function resetGame(
 
         }
     );
-
 
     state = {
 
@@ -1261,7 +1078,6 @@ function resetGame(
         score:
             0,
 
-
         paused:
             false,
 
@@ -1270,7 +1086,6 @@ function resetGame(
 
         countdownValue:
             null,
-
 
         player:
             [...PLAYER_START],
@@ -1281,13 +1096,11 @@ function resetGame(
         nextDir:
             [0, 0],
 
-
         dino:
             [...DINO_START],
 
         dinoTick:
             0,
-
 
         castles:
             new Set(
@@ -1296,39 +1109,30 @@ function resetGame(
                 )
             ),
 
-
         castleLetters:
             letterMap,
-
 
         collected:
             [],
 
-
         portalCooldown:
             0,
-
 
         lastEvent:
             "Collect all Kinetic Sand castles!"
 
     };
 
-
     guessPanel.style.display =
         "none";
-
 
     guessFeedback.textContent =
         "";
 
-
     guessInput.value =
         "";
 
-
     render();
-
 
     if (beginNow) {
 
@@ -1337,8 +1141,6 @@ function resetGame(
     }
 
 }
-
-
 
 /* ============================================================
    WALL CHECK
@@ -1365,8 +1167,6 @@ function isWall(
 
 }
 
-
-
 function samePos(
     a,
     b
@@ -1382,8 +1182,6 @@ function samePos(
 
 }
 
-
-
 /* ============================================================
    PLAYER MOVEMENT
    ============================================================ */
@@ -1394,11 +1192,9 @@ function movePlayer() {
         state.player[0] +
         state.nextDir[0];
 
-
     let nc =
         state.player[1] +
         state.nextDir[1];
-
 
     if (
         !isWall(
@@ -1412,16 +1208,13 @@ function movePlayer() {
 
     }
 
-
     nr =
         state.player[0] +
         state.playerDir[0];
 
-
     nc =
         state.player[1] +
         state.playerDir[1];
-
 
     if (
         !isWall(
@@ -1435,7 +1228,6 @@ function movePlayer() {
 
     }
 
-
     checkPortal();
 
     checkCastle();
@@ -1443,8 +1235,6 @@ function movePlayer() {
     checkCollision();
 
 }
-
-
 
 /* ============================================================
    PORTALS
@@ -1460,7 +1250,6 @@ function checkPortal() {
 
     }
 
-
     for (
         const [
             label,
@@ -1475,10 +1264,8 @@ function checkPortal() {
         const entry =
             pair[0];
 
-
         const exit =
             pair[1];
-
 
         if (
             samePos(
@@ -1490,14 +1277,11 @@ function checkPortal() {
             state.player =
                 [...exit];
 
-
             state.portalCooldown =
                 4;
 
-
             state.lastEvent =
                 `🌀 Portal ${label}: purple IN → blue OUT`;
-
 
             return;
 
@@ -1506,8 +1290,6 @@ function checkPortal() {
     }
 
 }
-
-
 
 /* ============================================================
    CASTLE COLLECTION
@@ -1520,7 +1302,6 @@ function checkCastle() {
             state.player
         );
 
-
     if (
         !state.castles.has(k)
     ) {
@@ -1529,26 +1310,20 @@ function checkCastle() {
 
     }
 
-
     const letter =
         state.castleLetters[k];
 
-
     state.castles.delete(k);
-
 
     state.collected.push(
         letter
     );
 
-
     state.score +=
         250;
 
-
     state.lastEvent =
         `🏰 Castle opened — letter: ${letter}`;
-
 
     if (
         state.castles.size === 0
@@ -1557,18 +1332,14 @@ function checkCastle() {
         state.playerDir =
             [0, 0];
 
-
         state.nextDir =
             [0, 0];
-
 
         state.awaitingGuess =
             true;
 
-
         state.lastEvent =
             "🦖😢 NOOO! You got all the castles...";
-
 
         /*
         Give the player 5 seconds
@@ -1596,8 +1367,6 @@ function checkCastle() {
 
 }
 
-
-
 /* ============================================================
    NEIGHBOURS
    ============================================================ */
@@ -1612,10 +1381,8 @@ function getNeighbors(
         c
     ] = pos;
 
-
     const out =
         [];
-
 
     for (
         const [
@@ -1634,10 +1401,8 @@ function getNeighbors(
         const nr =
             r + dr;
 
-
         const nc =
             c + dc;
-
 
         if (
             !isWall(
@@ -1653,7 +1418,6 @@ function getNeighbors(
         }
 
     }
-
 
     if (
         includePortals
@@ -1684,12 +1448,9 @@ function getNeighbors(
 
     }
 
-
     return out;
 
 }
-
-
 
 /* ============================================================
    BFS PATH FINDING
@@ -1711,24 +1472,19 @@ function bfsNextStep(
 
     }
 
-
     const q =
         [[...start]];
 
-
     const prev =
         new Map();
-
 
     prev.set(
         keyOf(start),
         null
     );
 
-
     let found =
         false;
-
 
     while (
         q.length
@@ -1736,7 +1492,6 @@ function bfsNextStep(
 
         const cur =
             q.shift();
-
 
         if (
             samePos(
@@ -1752,7 +1507,6 @@ function bfsNextStep(
 
         }
 
-
         for (
             const nxt
             of
@@ -1765,7 +1519,6 @@ function bfsNextStep(
             const k =
                 keyOf(nxt);
 
-
             if (
                 !prev.has(k)
             ) {
@@ -1774,7 +1527,6 @@ function bfsNextStep(
                     k,
                     cur
                 );
-
 
                 q.push(
                     nxt
@@ -1785,7 +1537,6 @@ function bfsNextStep(
         }
 
     }
-
 
     if (
         !found &&
@@ -1798,16 +1549,13 @@ function bfsNextStep(
 
     }
 
-
     let step =
         [...target];
-
 
     let parent =
         prev.get(
             keyOf(step)
         );
-
 
     if (
         parent === undefined
@@ -1816,7 +1564,6 @@ function bfsNextStep(
         return [...start];
 
     }
-
 
     while (
         parent &&
@@ -1829,7 +1576,6 @@ function bfsNextStep(
         step =
             [...parent];
 
-
         parent =
             prev.get(
                 keyOf(step)
@@ -1837,12 +1583,9 @@ function bfsNextStep(
 
     }
 
-
     return step;
 
 }
-
-
 
 /* ============================================================
    PREDICT PLAYER MOVEMENT
@@ -1853,13 +1596,11 @@ function predictPlayerTarget() {
     let target =
         [...state.player];
 
-
     const [
         dr,
         dc
     ] =
         state.playerDir;
-
 
     for (
         let i = 0;
@@ -1870,10 +1611,8 @@ function predictPlayerTarget() {
         const nr =
             target[0] + dr;
 
-
         const nc =
             target[1] + dc;
-
 
         if (
             isWall(
@@ -1886,18 +1625,14 @@ function predictPlayerTarget() {
 
         }
 
-
         target =
             [nr, nc];
 
     }
 
-
     return target;
 
 }
-
-
 
 /* ============================================================
    DINOSAUR AI
@@ -1907,7 +1642,6 @@ function moveDino() {
 
     state.dinoTick +=
         1;
-
 
     /*
     Dino skips every fourth move.
@@ -1923,18 +1657,14 @@ function moveDino() {
 
     }
 
-
     const start =
         [...state.dino];
-
 
     const player =
         [...state.player];
 
-
     const predicted =
         predictPlayerTarget();
-
 
     const manhattan =
 
@@ -1950,7 +1680,6 @@ function moveDino() {
             player[1]
         );
 
-
     const target =
 
         manhattan <= 7
@@ -1963,13 +1692,11 @@ function moveDino() {
 
         predicted;
 
-
     let next =
         bfsNextStep(
             start,
             target
         );
-
 
     if (
         samePos(
@@ -1993,10 +1720,8 @@ function moveDino() {
 
     }
 
-
     state.dino =
         [...next];
-
 
     /*
     Dino can use portals too.
@@ -2026,12 +1751,9 @@ function moveDino() {
 
     }
 
-
     checkCollision();
 
 }
-
-
 
 /* ============================================================
    COLLISION
@@ -2048,7 +1770,6 @@ function checkCollision() {
 
     }
 
-
     if (
         samePos(
             state.player,
@@ -2059,18 +1780,14 @@ function checkCollision() {
         state.gameOver =
             true;
 
-
         state.won =
             false;
-
 
         state.playerDir =
             [0, 0];
 
-
         state.nextDir =
             [0, 0];
-
 
         state.lastEvent =
             "🦖 NOM NOM... you were delicious!";
@@ -2078,8 +1795,6 @@ function checkCollision() {
     }
 
 }
-
-
 
 /* ============================================================
    INITIAL 3-2-1-GO COUNTDOWN
@@ -2098,7 +1813,6 @@ function startOpeningCountdown() {
 
     }
 
-
     if (openingCountdownTimer) {
 
         clearInterval(
@@ -2106,7 +1820,6 @@ function startOpeningCountdown() {
         );
 
     }
-
 
     if (openingCountdownFinish) {
 
@@ -2116,25 +1829,19 @@ function startOpeningCountdown() {
 
     }
 
-
     state.paused =
         true;
-
 
     state.countdownActive =
         true;
 
-
     state.countdownValue =
         3;
-
 
     state.lastEvent =
         "Get ready...";
 
-
     render();
-
 
     openingCountdownTimer =
         setInterval(
@@ -2147,13 +1854,11 @@ function startOpeningCountdown() {
                     state.countdownValue -=
                         1;
 
-
                     render();
 
                     return;
 
                 }
-
 
                 if (
                     state.countdownValue === 1
@@ -2162,10 +1867,8 @@ function startOpeningCountdown() {
                     state.countdownValue =
                         "GO!";
 
-
                     state.lastEvent =
                         "GO! 🐶💨";
-
 
                     render();
 
@@ -2173,11 +1876,9 @@ function startOpeningCountdown() {
 
                 }
 
-
                 clearInterval(
                     openingCountdownTimer
                 );
-
 
                 openingCountdownTimer =
                     null;
@@ -2185,7 +1886,6 @@ function startOpeningCountdown() {
             },
             850
         );
-
 
     openingCountdownFinish =
         setTimeout(
@@ -2204,32 +1904,25 @@ function startOpeningCountdown() {
 
                 }
 
-
                 state.countdownActive =
                     false;
-
 
                 state.countdownValue =
                     null;
 
-
                 state.paused =
                     false;
-
 
                 state.lastEvent =
                     "Collect all Kinetic Sand castles!";
 
-
                 render();
-
 
                 timer =
                     setInterval(
                         gameLoop,
                         SPEED
                     );
-
 
                 ROOT.focus();
 
@@ -2238,8 +1931,6 @@ function startOpeningCountdown() {
         );
 
 }
-
-
 
 /* ============================================================
    PAUSE
@@ -2257,7 +1948,6 @@ function pauseGame() {
 
     }
 
-
     if (
         !state.paused
     ) {
@@ -2265,18 +1955,14 @@ function pauseGame() {
         state.paused =
             true;
 
-
         state.playerDir =
             [0, 0];
-
 
         state.nextDir =
             [0, 0];
 
-
         state.lastEvent =
             "🐾 Pawsing the Claws...";
-
 
         render();
 
@@ -2289,8 +1975,6 @@ function pauseGame() {
     }
 
 }
-
-
 
 /* ============================================================
    PAUSE RESUME COUNTDOWN
@@ -2307,21 +1991,16 @@ function startCountdown() {
 
     }
 
-
     state.countdownActive =
         true;
-
 
     state.countdownValue =
         3;
 
-
     state.lastEvent =
         "Get ready...";
 
-
     render();
-
 
     const countdown =
         setInterval(
@@ -2329,7 +2008,6 @@ function startCountdown() {
 
                 state.countdownValue -=
                     1;
-
 
                 if (
                     state.countdownValue <= 0
@@ -2339,33 +2017,25 @@ function startCountdown() {
                         countdown
                     );
 
-
                     state.countdownActive =
                         false;
-
 
                     state.countdownValue =
                         null;
 
-
                     state.paused =
                         false;
-
 
                     state.lastEvent =
                         "GO! 🐶💨";
 
-
                     render();
 
-
                     ROOT.focus();
-
 
                     return;
 
                 }
-
 
                 render();
 
@@ -2375,8 +2045,6 @@ function startCountdown() {
 
 }
 
-
-
 /* ============================================================
    LETTER HELPERS
    ============================================================ */
@@ -2385,7 +2053,6 @@ function counts(s) {
 
     const m =
         {};
-
 
     for (
         const ch
@@ -2397,12 +2064,9 @@ function counts(s) {
 
     }
 
-
     return m;
 
 }
-
-
 
 function sameCounts(
     a,
@@ -2412,10 +2076,8 @@ function sameCounts(
     const ca =
         counts(a);
 
-
     const cb =
         counts(b);
-
 
     const keys =
         new Set(
@@ -2424,7 +2086,6 @@ function sameCounts(
                 ...Object.keys(cb)
             ]
         );
-
 
     for (
         const k
@@ -2443,12 +2104,9 @@ function sameCounts(
 
     }
 
-
     return true;
 
 }
-
-
 
 /* ============================================================
    GUESS PANEL
@@ -2463,24 +2121,18 @@ function showGuessPanel() {
             "   "
         );
 
-
     guessPanel.style.display =
         "block";
-
 
     guessFeedback.textContent =
         "";
 
-
     guessInput.value =
         "";
-
 
     guessInput.focus();
 
 }
-
-
 
 /* ============================================================
    GUESS WORD
@@ -2493,7 +2145,6 @@ function submitGuess() {
             .trim()
             .toUpperCase();
 
-
     if (
         guess === WORD
     ) {
@@ -2501,43 +2152,33 @@ function submitGuess() {
         state.awaitingGuess =
             false;
 
-
         state.gameOver =
             true;
-
 
         state.won =
             true;
 
-
         state.score +=
             1000;
-
 
         state.lastEvent =
             "🎉 CORRECT! TESTING!";
 
-
         guessPanel.style.display =
             "none";
 
-
         render();
 
-
         startFireworks();
-
 
         return;
 
     }
 
-
     const collected =
         state.collected.join(
             ""
         );
-
 
     if (
         !sameCounts(
@@ -2548,7 +2189,7 @@ function submitGuess() {
 
         guessFeedback.textContent =
 
-            "🦖 RAWR! Sneaky letters? NOM NOM! " +
+            "🦖 RAWR! Sneaky letters? " +
 
             "Use only the 7 letters you actually found: "
 
@@ -2557,7 +2198,6 @@ function submitGuess() {
             state.collected.join(
                 " "
             );
-
 
         guessFeedback.style.color =
             "#fbbf24";
@@ -2568,28 +2208,20 @@ function submitGuess() {
 
         guessFeedback.textContent =
 
-            "🦖 Whomp, whomp... NOM NOM! " +
-
-            "Right letters, wrong word. " +
-
+            "🦖 Whomp, whomp... " +
             "Better luck next time! 😋";
-
 
         guessFeedback.style.color =
             "#ff6b6b";
 
     }
 
-
     guessInput.value =
         "";
-
 
     guessInput.focus();
 
 }
-
-
 
 /* ============================================================
    GAME LOOP
@@ -2624,9 +2256,7 @@ function gameLoop() {
 
         }
 
-
         movePlayer();
-
 
         if (
             !state.gameOver &&
@@ -2639,12 +2269,9 @@ function gameLoop() {
 
     }
 
-
     render();
 
 }
-
-
 
 /* ============================================================
    TEXT LABELS
@@ -2658,7 +2285,6 @@ function updateLabels() {
 
         state.castles.size;
 
-
     statusEl.textContent =
 
         `Castles ${found}/${WORD.length}`
@@ -2671,10 +2297,8 @@ function updateLabels() {
 
         `   •   ${state.lastEvent}`;
 
-
     const slots =
         [...state.collected];
-
 
     while (
         slots.length <
@@ -2687,7 +2311,6 @@ function updateLabels() {
 
     }
 
-
     lettersEl.textContent =
 
         "Letters:   "
@@ -2699,8 +2322,6 @@ function updateLabels() {
         );
 
 }
-
-
 
 /* ============================================================
    DRAW HELPERS
@@ -2719,14 +2340,12 @@ function drawRect(
     ctx.fillStyle =
         fill;
 
-
     ctx.fillRect(
         x,
         y,
         w,
         h
     );
-
 
     if (
         stroke
@@ -2735,10 +2354,8 @@ function drawRect(
         ctx.strokeStyle =
             stroke;
 
-
         ctx.lineWidth =
             sw;
-
 
         ctx.strokeRect(
             x,
@@ -2750,8 +2367,6 @@ function drawRect(
     }
 
 }
-
-
 
 /* ============================================================
    DRAW PORTAL
@@ -2769,19 +2384,15 @@ function drawPortal(
     ] =
         pos;
 
-
     const cx =
         c * CELL +
         CELL / 2;
-
 
     const cy =
         r * CELL +
         CELL / 2;
 
-
     ctx.beginPath();
-
 
     ctx.arc(
         cx,
@@ -2790,7 +2401,6 @@ function drawPortal(
         0,
         Math.PI * 2
     );
-
 
     ctx.fillStyle =
 
@@ -2804,9 +2414,7 @@ function drawPortal(
 
         "#0284c7";
 
-
     ctx.fill();
-
 
     ctx.strokeStyle =
 
@@ -2820,16 +2428,12 @@ function drawPortal(
 
         "#bae6fd";
 
-
     ctx.lineWidth =
         3;
 
-
     ctx.stroke();
 
-
     ctx.beginPath();
-
 
     ctx.arc(
         cx,
@@ -2839,29 +2443,22 @@ function drawPortal(
         Math.PI * 2
     );
 
-
     ctx.strokeStyle =
         "white";
-
 
     ctx.lineWidth =
         1;
 
-
     ctx.stroke();
-
 
     ctx.textAlign =
         "center";
 
-
     ctx.fillStyle =
         "white";
 
-
     ctx.font =
         "bold 12px Arial";
-
 
     ctx.fillText(
         label,
@@ -2869,10 +2466,8 @@ function drawPortal(
         cy + 2
     );
 
-
     ctx.font =
         "bold 6px Arial";
-
 
     ctx.fillText(
         entry
@@ -2888,8 +2483,6 @@ function drawPortal(
 
 }
 
-
-
 /* ============================================================
    DRAW CASTLE
    ============================================================ */
@@ -2902,19 +2495,15 @@ function drawCastle(pos) {
     ] =
         pos;
 
-
     const cx =
         c * CELL +
         CELL / 2;
-
 
     const cy =
         r * CELL +
         CELL / 2;
 
-
     ctx.beginPath();
-
 
     ctx.arc(
         cx,
@@ -2924,24 +2513,18 @@ function drawCastle(pos) {
         Math.PI * 2
     );
 
-
     ctx.fillStyle =
         "#fde68a";
 
-
     ctx.fill();
-
 
     ctx.strokeStyle =
         "#f59e0b";
 
-
     ctx.lineWidth =
         2;
 
-
     ctx.stroke();
-
 
     drawRect(
         cx - 10,
@@ -2952,7 +2535,6 @@ function drawCastle(pos) {
         "#7c4a16"
     );
 
-
     drawRect(
         cx - 11,
         cy - 10,
@@ -2961,7 +2543,6 @@ function drawCastle(pos) {
         "#d6a24b",
         "#7c4a16"
     );
-
 
     drawRect(
         cx + 4,
@@ -2972,7 +2553,6 @@ function drawCastle(pos) {
         "#7c4a16"
     );
 
-
     drawRect(
         cx - 3,
         cy + 3,
@@ -2982,8 +2562,6 @@ function drawCastle(pos) {
     );
 
 }
-
-
 
 /* ============================================================
    DRAW PLAYER - RED DOG
@@ -2997,22 +2575,17 @@ function drawPlayer() {
     ] =
         state.player;
 
-
     const cx =
         c * CELL +
         CELL / 2;
-
 
     const cy =
         r * CELL +
         CELL / 2;
 
-
-
     /* LEFT EAR */
 
     ctx.beginPath();
-
 
     ctx.ellipse(
         cx - 11,
@@ -3024,19 +2597,14 @@ function drawPlayer() {
         Math.PI * 2
     );
 
-
     ctx.fillStyle =
         "#b91c1c";
 
-
     ctx.fill();
-
-
 
     /* RIGHT EAR */
 
     ctx.beginPath();
-
 
     ctx.ellipse(
         cx + 11,
@@ -3048,15 +2616,11 @@ function drawPlayer() {
         Math.PI * 2
     );
 
-
     ctx.fill();
-
-
 
     /* HEAD */
 
     ctx.beginPath();
-
 
     ctx.arc(
         cx,
@@ -3066,30 +2630,22 @@ function drawPlayer() {
         Math.PI * 2
     );
 
-
     ctx.fillStyle =
         "#ef4444";
 
-
     ctx.fill();
-
 
     ctx.strokeStyle =
         "#fca5a5";
 
-
     ctx.lineWidth =
         2;
 
-
     ctx.stroke();
-
-
 
     /* MUZZLE */
 
     ctx.beginPath();
-
 
     ctx.ellipse(
         cx,
@@ -3101,19 +2657,14 @@ function drawPlayer() {
         Math.PI * 2
     );
 
-
     ctx.fillStyle =
         "#fecaca";
 
-
     ctx.fill();
-
-
 
     /* EYES */
 
     ctx.beginPath();
-
 
     ctx.arc(
         cx - 5,
@@ -3123,7 +2674,6 @@ function drawPlayer() {
         Math.PI * 2
     );
 
-
     ctx.arc(
         cx + 5,
         cy - 4,
@@ -3132,19 +2682,14 @@ function drawPlayer() {
         Math.PI * 2
     );
 
-
     ctx.fillStyle =
         "#111827";
 
-
     ctx.fill();
-
-
 
     /* NOSE */
 
     ctx.beginPath();
-
 
     ctx.ellipse(
         cx,
@@ -3156,12 +2701,9 @@ function drawPlayer() {
         Math.PI * 2
     );
 
-
     ctx.fill();
 
 }
-
-
 
 /* ============================================================
    DRAW DINOSAUR
@@ -3175,31 +2717,24 @@ function drawDino() {
     ] =
         state.dino;
 
-
     const cx =
         c * CELL +
         CELL / 2;
-
 
     const cy =
         r * CELL +
         CELL / 2;
 
-
     ctx.fillStyle =
         "#22c55e";
-
 
     ctx.strokeStyle =
         "#86efac";
 
-
     ctx.lineWidth =
         2;
 
-
     ctx.beginPath();
-
 
     ctx.arc(
         cx,
@@ -3209,35 +2744,27 @@ function drawDino() {
         0
     );
 
-
     ctx.lineTo(
         cx + 14,
         cy + 10
     );
-
 
     ctx.lineTo(
         cx - 14,
         cy + 10
     );
 
-
     ctx.closePath();
-
 
     ctx.fill();
 
-
     ctx.stroke();
-
 
     ctx.textAlign =
         "center";
 
-
     ctx.font =
         "15px Arial";
-
 
     ctx.fillText(
         "🦖",
@@ -3246,8 +2773,6 @@ function drawDino() {
     );
 
 }
-
-
 
 /* ============================================================
    OVERLAY BOX
@@ -3262,10 +2787,8 @@ function overlayBox(
     const cx =
         canvas.width / 2;
 
-
     const cy =
         canvas.height / 2;
-
 
     drawRect(
 
@@ -3285,15 +2808,12 @@ function overlayBox(
 
     );
 
-
     return [
         cx,
         cy
     ];
 
 }
-
-
 
 /* ============================================================
    PAUSE / COUNTDOWN OVERLAY
@@ -3316,18 +2836,14 @@ function drawPauseOverlay() {
                 "#f87171"
             );
 
-
         ctx.textAlign =
             "center";
-
 
         ctx.fillStyle =
             "white";
 
-
         ctx.font =
             "bold 17px Arial";
-
 
         ctx.fillText(
             "READY?",
@@ -3335,10 +2851,8 @@ function drawPauseOverlay() {
             cy - 38
         );
 
-
         ctx.fillStyle =
             "#fde047";
-
 
         ctx.font =
 
@@ -3352,7 +2866,6 @@ function drawPauseOverlay() {
 
             "bold 56px Arial";
 
-
         ctx.fillText(
 
             String(
@@ -3365,11 +2878,9 @@ function drawPauseOverlay() {
 
         );
 
-
         return;
 
     }
-
 
     const [
         cx,
@@ -3381,18 +2892,14 @@ function drawPauseOverlay() {
             "#f87171"
         );
 
-
     ctx.textAlign =
         "center";
-
 
     ctx.fillStyle =
         "#fca5a5";
 
-
     ctx.font =
         "bold 20px Arial";
-
 
     ctx.fillText(
         "🐾 PAWSING THE CLAWS 🐾",
@@ -3400,14 +2907,11 @@ function drawPauseOverlay() {
         cy - 42
     );
 
-
     ctx.fillStyle =
         "white";
 
-
     ctx.font =
         "bold 13px Arial";
-
 
     ctx.fillText(
         "Hunting for letters, dodging T-Rexes...",
@@ -3415,17 +2919,14 @@ function drawPauseOverlay() {
         cy - 5
     );
 
-
     ctx.fillText(
         "even legendary castle explorers need a breather.",
         cx,
         cy + 14
     );
 
-
     ctx.fillStyle =
         "#93c5fd";
-
 
     ctx.fillText(
         "Press SPACE when you're ready to run again!",
@@ -3434,8 +2935,6 @@ function drawPauseOverlay() {
     );
 
 }
-
-
 
 /* ============================================================
    GUESS OVERLAY
@@ -3453,18 +2952,14 @@ function drawGuessOverlay() {
             "#ffd166"
         );
 
-
     ctx.textAlign =
         "center";
-
 
     ctx.fillStyle =
         "#ffd166";
 
-
     ctx.font =
         "bold 19px Arial";
-
 
     ctx.fillText(
         "🦖😢 NOOO! YOU GOT ALL THE CASTLES!",
@@ -3472,14 +2967,11 @@ function drawGuessOverlay() {
         cy - 20
     );
 
-
     ctx.fillStyle =
         "#86efac";
 
-
     ctx.font =
         "bold 14px Arial";
-
 
     ctx.fillText(
         "My snack escaped... Fine. Guess the word!",
@@ -3487,14 +2979,11 @@ function drawGuessOverlay() {
         cy + 10
     );
 
-
     ctx.fillStyle =
         "white";
 
-
     ctx.font =
         "bold 12px Arial";
-
 
     ctx.fillText(
         "Use all 7 letters to finish the game.",
@@ -3503,8 +2992,6 @@ function drawGuessOverlay() {
     );
 
 }
-
-
 
 /* ============================================================
    WIN / DEATH OVERLAY
@@ -3534,10 +3021,8 @@ function drawEndOverlay() {
 
         );
 
-
     ctx.textAlign =
         "center";
-
 
     if (
         state.won
@@ -3546,10 +3031,8 @@ function drawEndOverlay() {
         ctx.fillStyle =
             "#fde047";
 
-
         ctx.font =
             "bold 25px Arial";
-
 
         ctx.fillText(
             "🎉 CONGRATULATIONS! 🎉",
@@ -3557,14 +3040,11 @@ function drawEndOverlay() {
             cy - 20
         );
 
-
         ctx.fillStyle =
             "#7dd3fc";
 
-
         ctx.font =
             "bold 26px Arial";
-
 
         ctx.fillText(
             "TESTING",
@@ -3579,10 +3059,8 @@ function drawEndOverlay() {
         ctx.fillStyle =
             "#86efac";
 
-
         ctx.font =
             "bold 25px Arial";
-
 
         ctx.fillText(
             "🦖 NOM NOM NOM!",
@@ -3590,14 +3068,11 @@ function drawEndOverlay() {
             cy - 20
         );
 
-
         ctx.fillStyle =
             "white";
 
-
         ctx.font =
             "bold 17px Arial";
-
 
         ctx.fillText(
             "You were delicious! 😋",
@@ -3609,8 +3084,6 @@ function drawEndOverlay() {
 
 }
 
-
-
 /* ============================================================
    MAIN DRAW
    ============================================================ */
@@ -3619,14 +3092,12 @@ function render() {
 
     updateLabels();
 
-
     ctx.clearRect(
         0,
         0,
         canvas.width,
         canvas.height
     );
-
 
     drawRect(
         0,
@@ -3635,8 +3106,6 @@ function render() {
         canvas.height,
         "#050816"
     );
-
-
 
     /* DRAW MAZE */
 
@@ -3655,10 +3124,8 @@ function render() {
             const x =
                 c * CELL;
 
-
             const y =
                 r * CELL;
-
 
             if (
                 MAZE[r][c] === 1
@@ -3690,7 +3157,6 @@ function render() {
 
                 ctx.beginPath();
 
-
                 ctx.arc(
                     x + CELL / 2,
                     y + CELL / 2,
@@ -3699,10 +3165,8 @@ function render() {
                     Math.PI * 2
                 );
 
-
                 ctx.fillStyle =
                     "#a78bfa";
-
 
                 ctx.fill();
 
@@ -3711,8 +3175,6 @@ function render() {
         }
 
     }
-
-
 
     /* PORTALS */
 
@@ -3733,7 +3195,6 @@ function render() {
             true
         );
 
-
         drawPortal(
             pair[1],
             label,
@@ -3741,8 +3202,6 @@ function render() {
         );
 
     }
-
-
 
     /* CASTLES */
 
@@ -3759,15 +3218,11 @@ function render() {
 
     }
 
-
-
     /* CHARACTERS */
 
     drawDino();
 
     drawPlayer();
-
-
 
     /* OVERLAYS */
 
@@ -3795,13 +3250,9 @@ function render() {
 
     }
 
-
-
     drawFireworks();
 
 }
-
-
 
 /* ============================================================
    FIREWORKS
@@ -3811,14 +3262,11 @@ function startFireworks() {
 
     stopFireworks();
 
-
     fireworks =
         [];
 
-
     fireworkFrame =
         0;
-
 
     for (
         let i = 0;
@@ -3830,16 +3278,14 @@ function startFireworks() {
 
     }
 
-
     fireworkTimer =
         setInterval(
             () => {
 
                 fireworkFrame++;
 
-
                 if (
-                    fireworkFrame > 55
+                    fireworkFrame > 360
                 ) {
 
                     stopFireworks();
@@ -3849,7 +3295,6 @@ function startFireworks() {
                     return;
 
                 }
-
 
                 for (
                     const fw
@@ -3869,7 +3314,6 @@ function startFireworks() {
 
                             180;
 
-
                         p.x +=
 
                             Math.cos(rad)
@@ -3877,7 +3321,6 @@ function startFireworks() {
                             *
 
                             p.speed;
-
 
                         p.y +=
 
@@ -3895,10 +3338,8 @@ function startFireworks() {
 
                             0.13;
 
-
                         p.gravity +=
                             0.12;
-
 
                         p.speed *=
                             0.985;
@@ -3907,15 +3348,10 @@ function startFireworks() {
 
                 }
 
-
+                // Keep launching new fireworks
+                // throughout the celebration
                 if (
-                    [
-                        10,
-                        20,
-                        30
-                    ].includes(
-                        fireworkFrame
-                    )
+                    fireworkFrame % 15 === 0
                 ) {
 
                     for (
@@ -3930,7 +3366,6 @@ function startFireworks() {
 
                 }
 
-
                 render();
 
             },
@@ -3938,8 +3373,6 @@ function startFireworks() {
         );
 
 }
-
-
 
 /* ============================================================
    SPAWN FIREWORK
@@ -3963,7 +3396,6 @@ function spawnFirework() {
 
     ];
 
-
     const color =
 
         palette[
@@ -3980,7 +3412,6 @@ function spawnFirework() {
 
         ];
 
-
     const cx =
 
         80
@@ -3995,7 +3426,6 @@ function spawnFirework() {
             canvas.width -
             160
         );
-
 
     const cy =
 
@@ -4012,10 +3442,8 @@ function spawnFirework() {
             2
         );
 
-
     const particles =
         [];
-
 
     for (
         let i = 0;
@@ -4050,7 +3478,6 @@ function spawnFirework() {
 
     }
 
-
     fireworks.push(
         {
             color,
@@ -4059,8 +3486,6 @@ function spawnFirework() {
     );
 
 }
-
-
 
 /* ============================================================
    DRAW FIREWORKS
@@ -4091,9 +3516,7 @@ function drawFireworks() {
 
                 );
 
-
             ctx.beginPath();
-
 
             ctx.arc(
                 p.x,
@@ -4103,10 +3526,8 @@ function drawFireworks() {
                 Math.PI * 2
             );
 
-
             ctx.fillStyle =
                 fw.color;
-
 
             ctx.fill();
 
@@ -4115,8 +3536,6 @@ function drawFireworks() {
     }
 
 }
-
-
 
 /* ============================================================
    STOP FIREWORKS
@@ -4134,17 +3553,13 @@ function stopFireworks() {
 
     }
 
-
     fireworkTimer =
         null;
-
 
     fireworks =
         [];
 
 }
-
-
 
 /* ============================================================
    KEYBOARD
@@ -4168,7 +3583,6 @@ function keyHandler(e) {
 
         .toLowerCase();
 
-
     const editing =
 
         tag === "input"
@@ -4176,7 +3590,6 @@ function keyHandler(e) {
         ||
 
         tag === "textarea";
-
 
     if (
         editing
@@ -4198,17 +3611,12 @@ function keyHandler(e) {
 
         }
 
-
         return;
 
     }
 
-
-
     const key =
         e.key.toLowerCase();
-
-
 
     /* SPACE = PAUSE */
 
@@ -4223,8 +3631,6 @@ function keyHandler(e) {
         return;
 
     }
-
-
 
     if (
 
@@ -4248,8 +3654,6 @@ function keyHandler(e) {
 
     }
 
-
-
     const dirs = {
 
         arrowup:
@@ -4258,20 +3662,17 @@ function keyHandler(e) {
         w:
             [-1, 0],
 
-
         arrowdown:
             [1, 0],
 
         s:
             [1, 0],
 
-
         arrowleft:
             [0, -1],
 
         a:
             [0, -1],
-
 
         arrowright:
             [0, 1],
@@ -4281,13 +3682,11 @@ function keyHandler(e) {
 
     };
 
-
     if (
         dirs[key]
     ) {
 
         e.preventDefault();
-
 
         state.nextDir =
             dirs[key];
@@ -4295,8 +3694,6 @@ function keyHandler(e) {
     }
 
 }
-
-
 
 /* ============================================================
    BUTTON LISTENERS
@@ -4306,8 +3703,6 @@ ROOT.addEventListener(
     "keydown",
     keyHandler
 );
-
-
 
 document
     .getElementById(
@@ -4324,8 +3719,6 @@ document
         }
     );
 
-
-
 startGameButton.addEventListener(
     "click",
     () => {
@@ -4333,22 +3726,17 @@ startGameButton.addEventListener(
         introPanel.style.display =
             "none";
 
-
         gameArea.style.display =
             "block";
-
 
         resetGame(
             true
         );
 
-
         ROOT.focus();
 
     }
 );
-
-
 
 document
     .getElementById(
@@ -4359,14 +3747,10 @@ document
         pauseGame
     );
 
-
-
 guessButton.addEventListener(
     "click",
     submitGuess
 );
-
-
 
 /* Clicking game restores
    keyboard focus */
@@ -4379,8 +3763,6 @@ canvas.addEventListener(
 
     }
 );
-
-
 
 ROOT.addEventListener(
     "click",
@@ -4397,8 +3779,6 @@ ROOT.addEventListener(
     }
 );
 
-
-
 /* ============================================================
    INITIAL STATE
    IMPORTANT:
@@ -4410,7 +3790,6 @@ resetGame(
     false
 );
 
-
 })();
 
 </script>
@@ -4418,7 +3797,6 @@ resetGame(
 </div>
 
 """
-
 
 # ============================================================
 # DISPLAY GAME
