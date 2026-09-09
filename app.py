@@ -6,7 +6,7 @@ import streamlit.components.v1 as components
 # PAGE CONFIG
 # ============================================================
 st.set_page_config(
-    page_title="Testign Game",
+    page_title="Testing Game",
     page_icon="🔵",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -150,7 +150,7 @@ GAME_HTML = r"""
         sans-serif;
 }
 #ks-wrap {
-    max-width: 1050px;
+    max-width: 900px;
     margin: 0 auto;
 }
 
@@ -334,7 +334,7 @@ GAME_HTML = r"""
     */
 
     width:
-        min(900px, 94vw);
+        min(780px, 88vw);
 
     max-width:
         100%;
@@ -612,7 +612,7 @@ GAME_HTML = r"""
 <div id="ks-header">
 
     <div id="ks-title">
-        🏖️ KINETIC SAND PAC-MAN 🏰
+        🏖️ Game Testing 🏰
     </div>
 
     <div id="ks-status">
