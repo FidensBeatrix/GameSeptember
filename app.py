@@ -58,7 +58,7 @@ def show_login():
     )
     with left:
         st.markdown(
-            '<div class="login-title">🔵 Testign Game</div>',
+            '<div class="login-title">🔵 Testing Game</div>',
             unsafe_allow_html=True,
         )
         st.markdown(
@@ -267,6 +267,7 @@ GAME_HTML = r"""
 
     margin-top:
         4px;
+    color:black;
 }
 
 #ks-letters {
