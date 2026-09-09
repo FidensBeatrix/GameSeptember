@@ -1120,7 +1120,7 @@ function resetGame(
             0,
 
         lastEvent:
-            "Collect all Kinetic Sand castles!"
+            "Find all letters in the castles!"
 
     };
 
