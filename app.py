@@ -834,8 +834,8 @@ function applyRandomMaze() {
 
 /* ============================================================
    RANDOM WORD / PHRASE + RANDOM CASTLES
-   Spaces and punctuation are shown as part of the answer,
-   but only letters/numbers need castles.
+   Spaces do NOT need castles.
+   Every other character DOES, including punctuation such as !.
    ============================================================ */
 
 function chooseRandomWord() {
@@ -847,7 +847,7 @@ function chooseRandomWord() {
 
     WORD = choices[Math.floor(Math.random() * choices.length)];
     previousWord = WORD;
-    PLAYABLE_LETTERS = [...WORD].filter(ch => /[A-Za-z0-9]/.test(ch));
+    PLAYABLE_LETTERS = [...WORD].filter(ch => ch !== " ");
 }
 
 function allPortalKeys() {
@@ -2224,25 +2224,37 @@ function showGuessPanel() {
    GUESS WORD
    ============================================================ */
 
-function normalizedAnswer(s) {
+function normalizedSpacing(s) {
     return s
         .trim()
-        .replace(/\s+/g, " ")
-        .toLocaleLowerCase();
+        .replace(/\s+/g, " ");
+}
+
+function answerMatches(rawGuess) {
+    const guess = normalizedSpacing(rawGuess);
+    const answer = normalizedSpacing(WORD);
+
+    // P!nk is deliberately case-sensitive:
+    // correct = P!nk
+    // wrong   = p!nk, P!NK, etc.
+    if (WORD === "P!nk") {
+        return guess === answer;
+    }
+
+    // The other words/phrases are case-insensitive.
+    return guess.toLocaleLowerCase() === answer.toLocaleLowerCase();
 }
 
 function playableOnly(s) {
-    return [...s]
-        .filter(ch => /[A-Za-z0-9]/.test(ch))
-        .join("")
-        .toLocaleLowerCase();
+    return [...normalizedSpacing(s)]
+        .filter(ch => ch !== " ")
+        .join("");
 }
 
 function submitGuess() {
     const rawGuess = guessInput.value;
-    const guess = normalizedAnswer(rawGuess);
 
-    if (guess === normalizedAnswer(WORD)) {
+    if (answerMatches(rawGuess)) {
         state.awaitingGuess = false;
         state.gameOver = true;
         state.won = true;
@@ -2256,16 +2268,32 @@ function submitGuess() {
     }
 
     const collected = state.collected.join("");
+    const guessedPlayable = playableOnly(rawGuess);
+    const collectedPlayable = playableOnly(collected);
 
-    if (!sameCounts(
-        playableOnly(rawGuess),
-        playableOnly(collected)
-    )) {
+    const comparableGuess =
+        WORD === "P!nk"
+            ? guessedPlayable
+            : guessedPlayable.toLocaleLowerCase();
+
+    const comparableCollected =
+        WORD === "P!nk"
+            ? collectedPlayable
+            : collectedPlayable.toLocaleLowerCase();
+
+    if (!sameCounts(comparableGuess, comparableCollected)) {
         guessFeedback.textContent =
-            "🦖 RAWR! Sneaky letters? " +
-            `Use only the ${PLAYABLE_LETTERS.length} letters you actually found: ` +
+            "🦖 RAWR! Sneaky characters? " +
+            `Use only the ${PLAYABLE_LETTERS.length} characters you actually found: ` +
             state.collected.join(" ");
 
+        guessFeedback.style.color = "#fbbf24";
+    } else if (
+        WORD === "P!nk" &&
+        normalizedSpacing(rawGuess) !== "P!nk"
+    ) {
+        guessFeedback.textContent =
+            "Almost! For this one capitalization matters: P is uppercase, n and k are lowercase — and don't forget !";
         guessFeedback.style.color = "#fbbf24";
     } else {
         guessFeedback.textContent =
@@ -2336,7 +2364,7 @@ function answerPattern() {
 
     return [...WORD]
         .map(ch => {
-            if (/[A-Za-z0-9]/.test(ch)) {
+            if (ch !== " ") {
                 if (collectedIndex < state.collected.length) {
                     return state.collected[collectedIndex++];
                 }
@@ -2344,8 +2372,8 @@ function answerPattern() {
                 return "_";
             }
 
-            // Spaces and punctuation are clues, not castle items.
-            return ch === " " ? "   " : ch;
+            // Spaces are shown automatically and do not need castles.
+            return "   ";
         })
         .join(" ");
 }
@@ -2776,12 +2804,12 @@ function drawDino() {
 
     ctx.lineTo(
         cx + 14,
-        cy + 10
+        cy + 8
     );
 
     ctx.lineTo(
         cx - 14,
-        cy + 10
+        cy + 8
     );
 
     ctx.closePath();
@@ -2861,8 +2889,8 @@ function drawPauseOverlay() {
             cy
         ] =
             overlayBox(
+                320,
                 230,
-                170,
                 "#f87171"
             );
 
@@ -2873,7 +2901,7 @@ function drawPauseOverlay() {
             "white";
 
         ctx.font =
-            "bold 17px Arial";
+            "bold 24px Arial";
 
         ctx.fillText(
             "READY?",
@@ -2890,11 +2918,11 @@ function drawPauseOverlay() {
 
             ?
 
-            "bold 40px Arial"
+            "bold 72px Arial"
 
             :
 
-            "bold 56px Arial";
+            "bold 72px Arial";
 
         ctx.fillText(
 
@@ -2917,8 +2945,8 @@ function drawPauseOverlay() {
         cy
     ] =
         overlayBox(
-            600,
-            164,
+            760,
+            230,
             "#f87171"
         );
 
@@ -2929,30 +2957,30 @@ function drawPauseOverlay() {
         "#bbf7d0";
 
     ctx.font =
-        "bold 20px Arial";
+        "bold 32px Arial";
 
     ctx.fillText(
         "🐾 PAWSING THE CLAWS 🐾",
         cx,
-        cy - 42
+        cy - 62
     );
 
     ctx.fillStyle =
         "white";
 
     ctx.font =
-        "bold 13px Arial";
+        "bold 20px Arial";
 
     ctx.fillText(
         "Hunting for letters, dodging T-Rexes...",
         cx,
-        cy - 5
+        cy - 12
     );
 
     ctx.fillText(
         "even legendary castle explorers need a breather.",
         cx,
-        cy + 14
+        cy + 18
     );
 
     ctx.fillStyle =
@@ -2961,7 +2989,7 @@ function drawPauseOverlay() {
     ctx.fillText(
         "Press SPACE when you're ready to run again!",
         cx,
-        cy + 52
+        cy + 72
     );
 
 }
@@ -2972,34 +3000,34 @@ function drawPauseOverlay() {
 
 function drawGuessOverlay() {
     const [cx, cy] = overlayBox(
-        520,
-        100,
+        780,
+        190,
         "#ffd166"
     );
 
     ctx.textAlign = "center";
     ctx.fillStyle = "#ffd166";
-    ctx.font = "bold 19px Arial";
+    ctx.font = "bold 31px Arial";
     ctx.fillText(
         "🦖😢 NOOO! YOU GOT ALL THE CASTLES!",
         cx,
-        cy - 20
+        cy - 42
     );
 
     ctx.fillStyle = "#86efac";
-    ctx.font = "bold 14px Arial";
+    ctx.font = "bold 21px Arial";
     ctx.fillText(
         "My snack escaped... Fine. Guess the word or phrase!",
         cx,
-        cy + 10
+        cy + 8
     );
 
     ctx.fillStyle = "white";
-    ctx.font = "bold 12px Arial";
+    ctx.font = "bold 18px Arial";
     ctx.fillText(
         `Use all ${PLAYABLE_LETTERS.length} letters to finish the game.`,
         cx,
-        cy + 33
+        cy + 50
     );
 }
 
@@ -3015,9 +3043,9 @@ function drawEndOverlay() {
     ] =
         overlayBox(
 
-            600,
+            780,
 
-            160,
+            220,
 
             state.won
 
@@ -3042,19 +3070,19 @@ function drawEndOverlay() {
             "#fde047";
 
         ctx.font =
-            "bold 25px Arial";
+            "bold 36px Arial";
 
         ctx.fillText(
             "🎉 CONGRATULATIONS! 🎉",
             cx,
-            cy - 20
+            cy - 42
         );
 
         ctx.fillStyle =
             "#7dd3fc";
 
         ctx.font =
-            "bold 26px Arial";
+            "bold 40px Arial";
 
         ctx.fillText(
             WORD,
@@ -3070,24 +3098,24 @@ function drawEndOverlay() {
             "#86efac";
 
         ctx.font =
-            "bold 25px Arial";
+            "bold 36px Arial";
 
         ctx.fillText(
             "🦖 NOM NOM NOM!",
             cx,
-            cy - 20
+            cy - 42
         );
 
         ctx.fillStyle =
             "white";
 
         ctx.font =
-            "bold 17px Arial";
+            "bold 24px Arial";
 
         ctx.fillText(
             "You were delicious! 😋",
             cx,
-            cy + 14
+            cy + 18
         );
 
     }
