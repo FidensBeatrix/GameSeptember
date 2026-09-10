@@ -2570,19 +2570,9 @@ function drawCastle(pos) {
 
 function drawPlayer() {
 
-    const [
-        r,
-        c
-    ] =
-        state.player;
-
-    const cx =
-        c * CELL +
-        CELL / 2;
-
-    const cy =
-        r * CELL +
-        CELL / 2;
+    const [r, c] = state.player;
+    const cx = c * CELL + CELL / 2;
+    const cy = r * CELL + CELL / 2;
 
     /* LEFT EAR */
 
@@ -2599,7 +2589,7 @@ function drawPlayer() {
     );
 
     ctx.fillStyle =
-        "#b91c1c";
+        "#15803d";
 
     ctx.fill();
 
@@ -2632,12 +2622,12 @@ function drawPlayer() {
     );
 
     ctx.fillStyle =
-        "#ef4444";
+        "#22c55e";
 
     ctx.fill();
 
     ctx.strokeStyle =
-        "#fca5a5";
+        "#bbf7d0";
 
     ctx.lineWidth =
         2;
@@ -2659,7 +2649,7 @@ function drawPlayer() {
     );
 
     ctx.fillStyle =
-        "#fecaca";
+        "#dcfce7";
 
     ctx.fill();
 
@@ -2727,10 +2717,10 @@ function drawDino() {
         CELL / 2;
 
     ctx.fillStyle =
-        "#22c55e";
+        "#ef4444";
 
     ctx.strokeStyle =
-        "#86efac";
+        "#fca5a5";
 
     ctx.lineWidth =
         2;
@@ -2897,7 +2887,7 @@ function drawPauseOverlay() {
         "center";
 
     ctx.fillStyle =
-        "#fca5a5";
+        "#bbf7d0";
 
     ctx.font =
         "bold 20px Arial";
@@ -3018,7 +3008,7 @@ function drawEndOverlay() {
 
             :
 
-            "#ef4444"
+            "#22c55e"
 
         );
 
