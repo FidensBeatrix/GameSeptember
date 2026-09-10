@@ -155,6 +155,50 @@ GAME_HTML = r"""
 }
 
 /* =========================
+   PLAYER SCOREBOARD
+   ========================= */
+
+#player-scoreboard {
+    max-width: 520px;
+    margin: 4px auto 14px auto;
+    text-align: center;
+}
+
+.scoreboard-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 6px;
+}
+
+.scoreboard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.score-card {
+    background: #111827;
+    border: 1px solid #7c3aed;
+    border-radius: 8px;
+    padding: 7px 8px;
+}
+
+.score-value {
+    color: #ffd166;
+    font-size: 19px;
+    font-weight: 900;
+    line-height: 1.05;
+}
+
+.score-label {
+    color: #f8fafc;
+    font-size: 10px;
+    font-weight: 700;
+    margin-top: 3px;
+}
+
+/* =========================
    INTRO
    ========================= */
 #intro-panel {
@@ -566,6 +610,24 @@ GAME_HTML = r"""
 
 <div id="ks-wrap">
 
+<div id="player-scoreboard">
+    <div class="scoreboard-title">Player stats</div>
+    <div class="scoreboard-grid">
+        <div class="score-card">
+            <div class="score-value" id="stat-games">0</div>
+            <div class="score-label">Games</div>
+        </div>
+        <div class="score-card">
+            <div class="score-value" id="stat-wins">0</div>
+            <div class="score-label">Wins</div>
+        </div>
+        <div class="score-card">
+            <div class="score-value" id="stat-words">0</div>
+            <div class="score-label">Different winning words</div>
+        </div>
+    </div>
+</div>
+
 <!-- ======================================================
      INTRO SCREEN
      ====================================================== -->
@@ -721,6 +783,76 @@ if (
 }
 
 ROOT.dataset.ready = "1";
+
+const CURRENT_USER = __CURRENT_USER_JSON__;
+
+const statGamesEl = document.getElementById("stat-games");
+const statWinsEl = document.getElementById("stat-wins");
+const statWordsEl = document.getElementById("stat-words");
+
+function statsStorageKey() {
+    return `kinetic_game_stats_${CURRENT_USER}`;
+}
+
+function loadPlayerStats() {
+    try {
+        const raw = localStorage.getItem(statsStorageKey());
+
+        if (!raw) {
+            return { games: 0, wins: 0, winningWords: [] };
+        }
+
+        const parsed = JSON.parse(raw);
+
+        return {
+            games: Number(parsed.games || 0),
+            wins: Number(parsed.wins || 0),
+            winningWords: Array.isArray(parsed.winningWords)
+                ? parsed.winningWords
+                : []
+        };
+    } catch (err) {
+        return { games: 0, wins: 0, winningWords: [] };
+    }
+}
+
+let playerStats = loadPlayerStats();
+
+function updateScoreboard() {
+    statGamesEl.textContent = playerStats.games;
+    statWinsEl.textContent = playerStats.wins;
+    statWordsEl.textContent = playerStats.winningWords.length;
+}
+
+function savePlayerStats() {
+    try {
+        localStorage.setItem(
+            statsStorageKey(),
+            JSON.stringify(playerStats)
+        );
+    } catch (err) {
+        // Keep the game playable if browser storage is unavailable.
+    }
+
+    updateScoreboard();
+}
+
+function recordGameStart() {
+    playerStats.games += 1;
+    savePlayerStats();
+}
+
+function recordWin() {
+    playerStats.wins += 1;
+
+    if (!playerStats.winningWords.includes(WORD)) {
+        playerStats.winningWords.push(WORD);
+    }
+
+    savePlayerStats();
+}
+
+updateScoreboard();
 
 const WORD_OPTIONS = [
     "Testing",
@@ -1443,8 +1575,7 @@ function checkCastle() {
             "🦖😢 NOOO! You got all the castles...";
 
         /*
-        Give the player 5 seconds
-        to enjoy the sad dinosaur.
+        Show the guess panel almost immediately.
         */
 
         guessTimer =
@@ -1461,7 +1592,7 @@ function checkCastle() {
                     }
 
                 },
-                5000
+                700
             );
 
     }
@@ -2236,6 +2367,13 @@ function showGuessPanel() {
 
     guessInput.focus();
 
+    requestAnimationFrame(() => {
+        guessPanel.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+        });
+    });
+
 }
 
 /* ============================================================
@@ -2278,6 +2416,8 @@ function submitGuess() {
         state.won = true;
         state.score += 1000;
         state.lastEvent = `🎉 CORRECT! ${WORD}!`;
+
+        recordWin();
 
         guessPanel.style.display = "none";
         render();
@@ -3779,6 +3919,8 @@ document
         "click",
         () => {
 
+            recordGameStart();
+
             resetGame(
                 true
             );
@@ -3795,6 +3937,8 @@ startGameButton.addEventListener(
 
         gameArea.style.display =
             "block";
+
+        recordGameStart();
 
         resetGame(
             true
@@ -3869,8 +4013,17 @@ resetGame(
 # DISPLAY GAME
 # ============================================================
 
+CURRENT_USER_JSON = json.dumps(
+    st.session_state.get("username", "Player")
+)
+
+GAME_HTML_FOR_USER = GAME_HTML.replace(
+    "__CURRENT_USER_JSON__",
+    CURRENT_USER_JSON
+)
+
 components.html(
-    GAME_HTML,
+    GAME_HTML_FOR_USER,
     height=825,
     scrolling=True
 )
