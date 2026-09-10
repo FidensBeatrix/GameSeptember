@@ -1,4 +1,4 @@
-# Kinetic Sand PAC-MAN — Streamlit
+# Dino-Word hunt — Streamlit
 
 Browser version of the Kinetic Sand castle game.
 
