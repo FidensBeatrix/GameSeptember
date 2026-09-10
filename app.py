@@ -664,6 +664,16 @@ GAME_HTML = r"""
     </div>
 
     <div
+        id="guess-rule"
+        style="
+            margin-top:8px;
+            font-weight:800;
+            color:#f8fafc;
+        "
+    >
+    </div>
+
+    <div
         style="
             margin:10px 0;
             font-weight:800
@@ -988,6 +998,11 @@ const guessFeedback =
 const foundLetters =
     document.getElementById(
         "found-letters"
+    );
+
+const guessRule =
+    document.getElementById(
+        "guess-rule"
     );
 
 const introPanel =
@@ -2200,6 +2215,9 @@ function sameCounts(
 
 function showGuessPanel() {
 
+    guessRule.textContent =
+        `Use all ${PLAYABLE_LETTERS.length} characters to finish the game.`;
+
     foundLetters.textContent =
         "Letters you found: "
         +
@@ -2263,7 +2281,19 @@ function submitGuess() {
 
         guessPanel.style.display = "none";
         render();
-        startFireworks();
+
+        // Move the view back to the game before the fireworks start.
+        requestAnimationFrame(() => {
+            canvas.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+        });
+
+        setTimeout(() => {
+            startFireworks();
+        }, 350);
+
         return;
     }
 
@@ -3267,9 +3297,8 @@ function render() {
     if (
         state.awaitingGuess
     ) {
-
-        drawGuessOverlay();
-
+        // Keep the maze visible while the lower guess panel is active.
+        // The guess panel below the game already shows the message.
     }
 
     else if (
