@@ -4160,6 +4160,21 @@ helpGameButton.addEventListener(
 helpGameLiveButton.addEventListener(
     "click",
     () => {
+        // Opening Help during gameplay automatically pauses the game.
+        // Do not trigger the resume countdown if it was already paused.
+        if (
+            !state.gameOver &&
+            !state.awaitingGuess &&
+            !state.countdownActive &&
+            !state.paused
+        ) {
+            state.paused = true;
+            state.playerDir = [0, 0];
+            state.nextDir = [0, 0];
+            state.lastEvent = "🐾 Pawsing the Claws...";
+            render();
+        }
+
         helpModal.style.display = "flex";
     }
 );
