@@ -164,6 +164,64 @@ GAME_HTML = r"""
     text-align: center;
 }
 
+/* Small all-player table on the left side */
+#all-player-scoreboard {
+    position: fixed;
+    left: 18px;
+    top: 48px;
+    width: 300px;
+    background: #111827;
+    border: 2px solid #7c3aed;
+    border-radius: 10px;
+    padding: 10px 12px;
+    z-index: 20;
+    box-sizing: border-box;
+}
+
+.all-score-title {
+    color: #ffd166;
+    font-size: 15px;
+    font-weight: 900;
+    text-align: center;
+    margin-bottom: 7px;
+}
+
+.all-score-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    color: #f8fafc;
+}
+
+.all-score-table th,
+.all-score-table td {
+    padding: 5px 4px;
+    text-align: center;
+    border-bottom: 1px solid #334155;
+}
+
+.all-score-table th:first-child,
+.all-score-table td:first-child {
+    text-align: left;
+}
+
+.all-score-table th {
+    color: #93c5fd;
+    font-weight: 900;
+}
+
+.all-score-table tr:last-child td {
+    border-bottom: 0;
+}
+
+@media (max-width: 1250px) {
+    #all-player-scoreboard {
+        position: static;
+        width: min(520px, 94%);
+        margin: 0 auto 10px auto;
+    }
+}
+
 .scoreboard-title {
     font-size: 13px;
     font-weight: 800;
@@ -610,6 +668,40 @@ GAME_HTML = r"""
 
 <div id="ks-wrap">
 
+<div id="all-player-scoreboard">
+    <div class="all-score-title">🏆 Player scoreboard</div>
+    <table class="all-score-table">
+        <thead>
+            <tr>
+                <th>Player</th>
+                <th>Games</th>
+                <th>Wins</th>
+                <th>Words</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Tester1</td>
+                <td id="all-Tester1-games">0</td>
+                <td id="all-Tester1-wins">0</td>
+                <td id="all-Tester1-words">0/3</td>
+            </tr>
+            <tr>
+                <td>Miso</td>
+                <td id="all-Miso-games">0</td>
+                <td id="all-Miso-wins">0</td>
+                <td id="all-Miso-words">0/3</td>
+            </tr>
+            <tr>
+                <td>Bubbly</td>
+                <td id="all-Bubbly-games">0</td>
+                <td id="all-Bubbly-wins">0</td>
+                <td id="all-Bubbly-words">0/3</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
 <div id="player-scoreboard">
     <div class="scoreboard-title">Player stats</div>
     <div class="scoreboard-grid">
@@ -818,10 +910,62 @@ function loadPlayerStats() {
 
 let playerStats = loadPlayerStats();
 
+const KNOWN_PLAYERS = ["Tester1", "Miso", "Bubbly"];
+
+function loadStatsForUser(username) {
+    try {
+        const raw = localStorage.getItem(
+            `kinetic_game_stats_${username}`
+        );
+
+        if (!raw) {
+            return { games: 0, wins: 0, winningWords: [] };
+        }
+
+        const parsed = JSON.parse(raw);
+
+        return {
+            games: Number(parsed.games || 0),
+            wins: Number(parsed.wins || 0),
+            winningWords: Array.isArray(parsed.winningWords)
+                ? parsed.winningWords
+                : []
+        };
+    } catch (err) {
+        return { games: 0, wins: 0, winningWords: [] };
+    }
+}
+
+function updateAllPlayerScoreboard() {
+    for (const username of KNOWN_PLAYERS) {
+        const stats = loadStatsForUser(username);
+
+        const gamesEl = document.getElementById(
+            `all-${username}-games`
+        );
+        const winsEl = document.getElementById(
+            `all-${username}-wins`
+        );
+        const wordsEl = document.getElementById(
+            `all-${username}-words`
+        );
+
+        if (gamesEl) gamesEl.textContent = stats.games;
+        if (winsEl) winsEl.textContent = stats.wins;
+        if (wordsEl) {
+            wordsEl.textContent =
+                `${stats.winningWords.length}/${WORD_OPTIONS.length}`;
+        }
+    }
+}
+
 function updateScoreboard() {
     statGamesEl.textContent = playerStats.games;
     statWinsEl.textContent = playerStats.wins;
-    statWordsEl.textContent = playerStats.winningWords.length;
+    statWordsEl.textContent =
+        `${playerStats.winningWords.length}/${WORD_OPTIONS.length}`;
+
+    updateAllPlayerScoreboard();
 }
 
 function savePlayerStats() {
@@ -852,13 +996,13 @@ function recordWin() {
     savePlayerStats();
 }
 
-updateScoreboard();
-
 const WORD_OPTIONS = [
     "Testing",
     "Res non verba",
     "P!nk"
 ];
+
+updateScoreboard();
 
 let WORD = WORD_OPTIONS[0];
 let PLAYABLE_LETTERS = [];
