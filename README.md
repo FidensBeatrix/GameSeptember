@@ -38,8 +38,7 @@ and change the passwords.
 
 ```toml
 [auth.users]
-Venitas = "YOUR_REAL_PASSWORD"
-Gondor = "ANOTHER_REAL_PASSWORD"
+Username = "YOUR_PASSWORD"
 ```
 
 6. Save/reboot the app if requested.
