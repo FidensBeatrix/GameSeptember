@@ -791,7 +791,7 @@ GAME_HTML = r"""
         </p>
 
         <p>
-            Around the maze you will find <strong>Kinetic Sand castles</strong>.
+            Around the maze you will find <strong> castles</strong>.
             Walk into a castle to collect it and reveal one hidden character.
         </p>
 
@@ -802,7 +802,7 @@ GAME_HTML = r"""
         </p>
 
         <p>
-            After you collect every castle, you will be asked to solve the secret.
+            After you visit every castle, you will be asked to solve the secret.
             The answer can be a <strong>word</strong>, a <strong>phrase</strong>,
             or a <strong>name</strong>.
         </p>
@@ -856,6 +856,10 @@ GAME_HTML = r"""
 
     <button id="pause">
         Pause / Resume (SPACE)
+    </button>
+
+    <button id="help-game-live">
+        Help
     </button>
 
 </div>
@@ -1353,6 +1357,11 @@ const startGameButton =
 const helpGameButton =
     document.getElementById(
         "help-game"
+    );
+
+const helpGameLiveButton =
+    document.getElementById(
+        "help-game-live"
     );
 
 const helpModal =
@@ -2359,7 +2368,7 @@ function startOpeningCountdown() {
                     false;
 
                 state.lastEvent =
-                    "Collect all Kinetic Sand castles!";
+                    "Visit all castles!";
 
                 render();
 
@@ -4142,6 +4151,13 @@ document
     );
 
 helpGameButton.addEventListener(
+    "click",
+    () => {
+        helpModal.style.display = "flex";
+    }
+);
+
+helpGameLiveButton.addEventListener(
     "click",
     () => {
         helpModal.style.display = "flex";
