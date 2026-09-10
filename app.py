@@ -660,7 +660,7 @@ GAME_HTML = r"""
 
     <div id="guess-text">
         My snack escaped...
-        Fine. Guess the word!
+        Fine. Guess the word or phrase!
     </div>
 
     <div
@@ -674,8 +674,8 @@ GAME_HTML = r"""
 
     <input
         id="guess-input"
-        maxlength="12"
-        placeholder="Type the hidden word..."
+        maxlength="40"
+        placeholder="Type the hidden word or phrase..."
     />
 
     <button id="guess-button">
@@ -712,146 +712,228 @@ if (
 
 ROOT.dataset.ready = "1";
 
-const WORD =
-    "TESTING";
+const WORD_OPTIONS = [
+    "Testing",
+    "Res non verba",
+    "P!nk"
+];
 
-const CELL =
-    30;
+let WORD = WORD_OPTIONS[0];
+let PLAYABLE_LETTERS = [];
+let previousWord = null;
 
-const SPEED =
-    135;
+const CELL = 30;
+const SPEED = 135;
 
 /* ============================================================
    MAZE
+   One base maze + mirrored variants.
+   Every round randomly selects one layout.
    ============================================================ */
 
-const MAZE_STR = [
-
+const BASE_MAZE_STR = [
     "11111111111111111111111111111111111111111",
-
     "10000000000000000000100000000000000000001",
-
     "10111101111101111110101111101111101111101",
-
     "10000101000001000000100000101000001000001",
-
     "11110101011111011111111110101011111011111",
-
     "10000100010000000000100000100010000000001",
-
     "10111111010111111110101111111010111111001",
-
     "10000000010000000000100000000010000000001",
-
     "10111101111101111110111110111111101111101",
-
     "10000100000001000000000000100000001000001",
-
     "11110111111001011111111110101111111011111",
-
     "10000100001000010000000000100010000000001",
-
     "10111101001111110111111110111010111111001",
-
     "10000001000000000100000000100010000000001",
-
     "10111111111101111110111111101111111111101",
-
     "10000000000100000000100000001000000000001",
-
     "11111101110111111110101111111011101111111",
-
     "10000001000100000000100000000000100000001",
-
     "10111111011101111111111110111110111111001",
-
     "10000000010000000000100000100000100000001",
-
     "10111101111111101110101111101111101111101",
-
     "10000100000000001000100000000000001000001",
-
     "11110111111111111011111111111111111011111",
-
     "10000000000000000000000000000000000000001",
-
     "11111111111111111111111111111111111111111"
-
 ];
 
-const MAZE =
-    MAZE_STR.map(
-        row =>
-            [...row].map(Number)
-    );
+const ROWS = BASE_MAZE_STR.length;
+const COLS = BASE_MAZE_STR[0].length;
 
-const ROWS =
-    MAZE.length;
+const BASE_PLAYER_START = [23, 2];
+const BASE_DINO_START = [1, 39];
 
-const COLS =
-    MAZE[0].length;
-
-/* ============================================================
-   START POSITIONS
-   ============================================================ */
-
-const PLAYER_START =
-    [23, 2];
-
-const DINO_START =
-    [1, 39];
-
-/* ============================================================
-   PORTALS
-   PURPLE = ENTRY
-   BLUE = EXIT
-   ============================================================ */
-
-const PORTALS = {
-
-    A: [
-        [1, 3],
-        [23, 37]
-    ],
-
-    B: [
-        [5, 38],
-        [19, 2]
-    ],
-
-    C: [
-        [17, 38],
-        [3, 2]
-    ],
-
-    D: [
-        [23, 20],
-        [1, 20]
-    ]
-
+const BASE_PORTALS = {
+    A: [[1, 3], [23, 37]],
+    B: [[5, 38], [19, 2]],
+    C: [[17, 38], [3, 2]],
+    D: [[23, 20], [1, 20]]
 };
 
+const MAZE_VARIANTS = [
+    "normal",
+    "mirrorX",
+    "mirrorY",
+    "rotate180"
+];
+
+let MAZE = [];
+let PLAYER_START = [...BASE_PLAYER_START];
+let DINO_START = [...BASE_DINO_START];
+let PORTALS = {};
+let CURRENT_MAZE_VARIANT = "normal";
+
+function transformPos(pos, variant) {
+    const [r, c] = pos;
+
+    if (variant === "mirrorX") {
+        return [r, COLS - 1 - c];
+    }
+    if (variant === "mirrorY") {
+        return [ROWS - 1 - r, c];
+    }
+    if (variant === "rotate180") {
+        return [ROWS - 1 - r, COLS - 1 - c];
+    }
+    return [r, c];
+}
+
+function buildMaze(variant) {
+    let rows = [...BASE_MAZE_STR];
+
+    if (variant === "mirrorX" || variant === "rotate180") {
+        rows = rows.map(row => [...row].reverse().join(""));
+    }
+    if (variant === "mirrorY" || variant === "rotate180") {
+        rows = [...rows].reverse();
+    }
+
+    return rows.map(row => [...row].map(Number));
+}
+
+function applyRandomMaze() {
+    CURRENT_MAZE_VARIANT =
+        MAZE_VARIANTS[
+            Math.floor(Math.random() * MAZE_VARIANTS.length)
+        ];
+
+    MAZE = buildMaze(CURRENT_MAZE_VARIANT);
+    PLAYER_START = transformPos(BASE_PLAYER_START, CURRENT_MAZE_VARIANT);
+    DINO_START = transformPos(BASE_DINO_START, CURRENT_MAZE_VARIANT);
+
+    PORTALS = {};
+    for (const [label, pair] of Object.entries(BASE_PORTALS)) {
+        PORTALS[label] = [
+            transformPos(pair[0], CURRENT_MAZE_VARIANT),
+            transformPos(pair[1], CURRENT_MAZE_VARIANT)
+        ];
+    }
+}
+
 /* ============================================================
-   CASTLES
+   RANDOM WORD / PHRASE + RANDOM CASTLES
+   Spaces and punctuation are shown as part of the answer,
+   but only letters/numbers need castles.
    ============================================================ */
 
-const CASTLE_POSITIONS = [
+function chooseRandomWord() {
+    let choices = WORD_OPTIONS;
 
-    [1, 8],
+    if (previousWord !== null && WORD_OPTIONS.length > 1) {
+        choices = WORD_OPTIONS.filter(word => word !== previousWord);
+    }
 
-    [3, 25],
+    WORD = choices[Math.floor(Math.random() * choices.length)];
+    previousWord = WORD;
+    PLAYABLE_LETTERS = [...WORD].filter(ch => /[A-Za-z0-9]/.test(ch));
+}
 
-    [7, 6],
+function allPortalKeys() {
+    const keys = new Set();
+    for (const pair of Object.values(PORTALS)) {
+        keys.add(keyOf(pair[0]));
+        keys.add(keyOf(pair[1]));
+    }
+    return keys;
+}
 
-    [11, 20],
+function manhattan(a, b) {
+    return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]);
+}
 
-    [15, 34],
+function randomCastlePositions(count) {
+    const portalKeys = allPortalKeys();
 
-    [19, 16],
+    const candidates = [];
+    for (let r = 1; r < ROWS - 1; r++) {
+        for (let c = 1; c < COLS - 1; c++) {
+            if (MAZE[r][c] !== 0) {
+                continue;
+            }
 
-    [23, 31]
+            const p = [r, c];
+            const k = keyOf(p);
 
-];
+            if (portalKeys.has(k)) {
+                continue;
+            }
+            if (samePos(p, PLAYER_START) || samePos(p, DINO_START)) {
+                continue;
+            }
+
+            // Keep castles away from the starting characters.
+            if (manhattan(p, PLAYER_START) < 5) {
+                continue;
+            }
+            if (manhattan(p, DINO_START) < 5) {
+                continue;
+            }
+
+            candidates.push(p);
+        }
+    }
+
+    // Try several times to obtain a nicely spread-out set.
+    for (let attempt = 0; attempt < 300; attempt++) {
+        const pool = shuffle(candidates);
+        const chosen = [];
+
+        for (const p of pool) {
+            const farEnough =
+                chosen.every(other => manhattan(p, other) >= 5);
+
+            if (farEnough) {
+                chosen.push(p);
+            }
+
+            if (chosen.length === count) {
+                return chosen;
+            }
+        }
+    }
+
+    // Fallback: slightly relax the spacing if a future long phrase
+    // needs more castles than the strict rule can fit.
+    for (let minDistance = 4; minDistance >= 2; minDistance--) {
+        const pool = shuffle(candidates);
+        const chosen = [];
+
+        for (const p of pool) {
+            if (chosen.every(other => manhattan(p, other) >= minDistance)) {
+                chosen.push(p);
+            }
+            if (chosen.length === count) {
+                return chosen;
+            }
+        }
+    }
+
+    return shuffle(candidates).slice(0, count);
+}
+
+let CASTLE_POSITIONS = [];
 
 /* ============================================================
    HTML ELEMENTS
@@ -1047,21 +1129,24 @@ function resetGame(
 
     stopFireworks();
 
-    const shuffled =
-        shuffle(
-            [...WORD]
+    applyRandomMaze();
+    chooseRandomWord();
+
+    CASTLE_POSITIONS =
+        randomCastlePositions(
+            PLAYABLE_LETTERS.length
         );
 
-    const letterMap =
-        {};
+    const shuffled =
+        shuffle(
+            PLAYABLE_LETTERS
+        );
+
+    const letterMap = {};
 
     CASTLE_POSITIONS.forEach(
         (p, i) => {
-
-            letterMap[
-                keyOf(p)
-            ] = shuffled[i];
-
+            letterMap[keyOf(p)] = shuffled[i];
         }
     );
 
@@ -2139,89 +2224,57 @@ function showGuessPanel() {
    GUESS WORD
    ============================================================ */
 
+function normalizedAnswer(s) {
+    return s
+        .trim()
+        .replace(/\s+/g, " ")
+        .toLocaleLowerCase();
+}
+
+function playableOnly(s) {
+    return [...s]
+        .filter(ch => /[A-Za-z0-9]/.test(ch))
+        .join("")
+        .toLocaleLowerCase();
+}
+
 function submitGuess() {
+    const rawGuess = guessInput.value;
+    const guess = normalizedAnswer(rawGuess);
 
-    const guess =
-        guessInput.value
-            .trim()
-            .toUpperCase();
+    if (guess === normalizedAnswer(WORD)) {
+        state.awaitingGuess = false;
+        state.gameOver = true;
+        state.won = true;
+        state.score += 1000;
+        state.lastEvent = `🎉 CORRECT! ${WORD}!`;
 
-    if (
-        guess === WORD
-    ) {
-
-        state.awaitingGuess =
-            false;
-
-        state.gameOver =
-            true;
-
-        state.won =
-            true;
-
-        state.score +=
-            1000;
-
-        state.lastEvent =
-            "🎉 CORRECT! TESTING!";
-
-        guessPanel.style.display =
-            "none";
-
+        guessPanel.style.display = "none";
         render();
-
         startFireworks();
-
         return;
-
     }
 
-    const collected =
-        state.collected.join(
-            ""
-        );
+    const collected = state.collected.join("");
 
-    if (
-        !sameCounts(
-            guess,
-            collected
-        )
-    ) {
-
+    if (!sameCounts(
+        playableOnly(rawGuess),
+        playableOnly(collected)
+    )) {
         guessFeedback.textContent =
-
             "🦖 RAWR! Sneaky letters? " +
+            `Use only the ${PLAYABLE_LETTERS.length} letters you actually found: ` +
+            state.collected.join(" ");
 
-            "Use only the 7 letters you actually found: "
-
-            +
-
-            state.collected.join(
-                " "
-            );
-
-        guessFeedback.style.color =
-            "#fbbf24";
-
-    }
-
-    else {
-
+        guessFeedback.style.color = "#fbbf24";
+    } else {
         guessFeedback.textContent =
-
-            "🦖 Whomp, whomp... " +
-            "Better luck next time! 😋";
-
-        guessFeedback.style.color =
-            "#ff6b6b";
-
+            "🦖 Whomp, whomp... Better luck next time! 😋";
+        guessFeedback.style.color = "#ff6b6b";
     }
 
-    guessInput.value =
-        "";
-
+    guessInput.value = "";
     guessInput.focus();
-
 }
 
 /* ============================================================
@@ -2278,50 +2331,36 @@ function gameLoop() {
    TEXT LABELS
    ============================================================ */
 
+function answerPattern() {
+    let collectedIndex = 0;
+
+    return [...WORD]
+        .map(ch => {
+            if (/[A-Za-z0-9]/.test(ch)) {
+                if (collectedIndex < state.collected.length) {
+                    return state.collected[collectedIndex++];
+                }
+                collectedIndex++;
+                return "_";
+            }
+
+            // Spaces and punctuation are clues, not castle items.
+            return ch === " " ? "   " : ch;
+        })
+        .join(" ");
+}
+
 function updateLabels() {
-
-    const found =
-
-        WORD.length -
-
-        state.castles.size;
+    const total = PLAYABLE_LETTERS.length;
+    const found = total - state.castles.size;
 
     statusEl.textContent =
-
-        `Castles ${found}/${WORD.length}`
-
-        +
-
-        `   •   Score ${state.score}`
-
-        +
-
+        `Castles ${found}/${total}` +
+        `   •   Score ${state.score}` +
         `   •   ${state.lastEvent}`;
 
-    const slots =
-        [...state.collected];
-
-    while (
-        slots.length <
-        WORD.length
-    ) {
-
-        slots.push(
-            "_"
-        );
-
-    }
-
     lettersEl.textContent =
-
-        "Letters:   "
-
-        +
-
-        slots.join(
-            "   "
-        );
-
+        "Letters:   " + answerPattern();
 }
 
 /* ============================================================
@@ -2932,56 +2971,36 @@ function drawPauseOverlay() {
    ============================================================ */
 
 function drawGuessOverlay() {
+    const [cx, cy] = overlayBox(
+        520,
+        100,
+        "#ffd166"
+    );
 
-    const [
-        cx,
-        cy
-    ] =
-        overlayBox(
-            520,
-            100,
-            "#ffd166"
-        );
-
-    ctx.textAlign =
-        "center";
-
-    ctx.fillStyle =
-        "#ffd166";
-
-    ctx.font =
-        "bold 19px Arial";
-
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#ffd166";
+    ctx.font = "bold 19px Arial";
     ctx.fillText(
         "🦖😢 NOOO! YOU GOT ALL THE CASTLES!",
         cx,
         cy - 20
     );
 
-    ctx.fillStyle =
-        "#86efac";
-
-    ctx.font =
-        "bold 14px Arial";
-
+    ctx.fillStyle = "#86efac";
+    ctx.font = "bold 14px Arial";
     ctx.fillText(
-        "My snack escaped... Fine. Guess the word!",
+        "My snack escaped... Fine. Guess the word or phrase!",
         cx,
         cy + 10
     );
 
-    ctx.fillStyle =
-        "white";
-
-    ctx.font =
-        "bold 12px Arial";
-
+    ctx.fillStyle = "white";
+    ctx.font = "bold 12px Arial";
     ctx.fillText(
-        "Use all 7 letters to finish the game.",
+        `Use all ${PLAYABLE_LETTERS.length} letters to finish the game.`,
         cx,
         cy + 33
     );
-
 }
 
 /* ============================================================
@@ -3038,7 +3057,7 @@ function drawEndOverlay() {
             "bold 26px Arial";
 
         ctx.fillText(
-            "TESTING",
+            WORD,
             cx,
             cy + 24
         );
