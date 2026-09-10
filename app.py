@@ -158,23 +158,13 @@ GAME_HTML = r"""
    PLAYER SCOREBOARD
    ========================= */
 
-#player-scoreboard {
-    max-width: 520px;
-    margin: 4px auto 14px auto;
-    text-align: center;
-}
-
-/* Small all-player table on the left side */
 #all-player-scoreboard {
-    position: fixed;
-    left: 18px;
-    top: 48px;
-    width: 300px;
+    width: min(650px, 94%);
+    margin: 4px auto 16px auto;
     background: #111827;
     border: 2px solid #7c3aed;
     border-radius: 10px;
-    padding: 10px 12px;
-    z-index: 20;
+    padding: 10px 14px;
     box-sizing: border-box;
 }
 
@@ -212,48 +202,6 @@ GAME_HTML = r"""
 
 .all-score-table tr:last-child td {
     border-bottom: 0;
-}
-
-@media (max-width: 1250px) {
-    #all-player-scoreboard {
-        position: static;
-        width: min(520px, 94%);
-        margin: 0 auto 10px auto;
-    }
-}
-
-.scoreboard-title {
-    font-size: 13px;
-    font-weight: 800;
-    color: #111827;
-    margin-bottom: 6px;
-}
-
-.scoreboard-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-}
-
-.score-card {
-    background: #111827;
-    border: 1px solid #7c3aed;
-    border-radius: 8px;
-    padding: 7px 8px;
-}
-
-.score-value {
-    color: #ffd166;
-    font-size: 19px;
-    font-weight: 900;
-    line-height: 1.05;
-}
-
-.score-label {
-    color: #f8fafc;
-    font-size: 10px;
-    font-weight: 700;
-    margin-top: 3px;
 }
 
 /* =========================
@@ -328,6 +276,93 @@ GAME_HTML = r"""
 
     background:
         #5b21b6;
+}
+
+#intro-buttons {
+    margin-top: 22px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+#intro-buttons #start-game,
+#intro-buttons #help-game {
+    margin-top: 0;
+}
+
+#help-game {
+    min-width: 150px;
+    border: 2px solid #7c3aed;
+    border-radius: 9px;
+    padding: 10px 16px;
+    font-size: 15px;
+    font-weight: 900;
+    color: #7c3aed;
+    background: white;
+    cursor: pointer;
+}
+
+#help-game:hover {
+    background: #f3e8ff;
+}
+
+/* Help pop-up */
+#help-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.72);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+#help-card {
+    width: min(620px, 92vw);
+    background: #111827;
+    border: 2px solid #7c3aed;
+    border-radius: 14px;
+    padding: 24px 26px;
+    color: #f8fafc;
+    text-align: left;
+    box-shadow: 0 18px 50px rgba(0,0,0,.35);
+}
+
+#help-card h3 {
+    margin: 0 0 14px 0;
+    color: #ffd166;
+    text-align: center;
+    font-size: 24px;
+}
+
+#help-card p {
+    margin: 9px 0;
+    line-height: 1.55;
+    font-size: 15px;
+}
+
+#help-card strong {
+    color: #93c5fd;
+}
+
+#close-help {
+    display: block;
+    margin: 18px auto 0;
+    min-width: 140px;
+    border: 0;
+    border-radius: 8px;
+    padding: 10px 15px;
+    background: #7c3aed;
+    color: white;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+#close-help:hover {
+    background: #5b21b6;
 }
 
 /* =========================
@@ -702,22 +737,6 @@ GAME_HTML = r"""
     </table>
 </div>
 
-<div id="player-scoreboard">
-    <div class="scoreboard-title">Player stats</div>
-    <div class="scoreboard-grid">
-        <div class="score-card">
-            <div class="score-value" id="stat-games">0</div>
-            <div class="score-label">Games</div>
-        </div>
-        <div class="score-card">
-            <div class="score-value" id="stat-wins">0</div>
-            <div class="score-label">Wins</div>
-        </div>
-        <div class="score-card">
-            <div class="score-value" id="stat-words">0</div>
-            <div class="score-label">Different winning words</div>
-        </div>
-    </div>
 </div>
 
 <!-- ======================================================
@@ -749,10 +768,54 @@ GAME_HTML = r"""
 
     </div>
 
-    <button id="start-game">
-        START GAME
-    </button>
+    <div id="intro-buttons">
+        <button id="start-game">
+            START GAME
+        </button>
 
+        <button id="help-game">
+            HELP
+        </button>
+    </div>
+
+</div>
+
+<div id="help-modal">
+    <div id="help-card">
+        <h3>🎮 How to play</h3>
+
+        <p>
+            You are the <strong>green dog</strong>.
+            Your job is to explore the playground while the
+            <strong>red dinosaur</strong> chases you.
+        </p>
+
+        <p>
+            Around the maze you will find <strong>Kinetic Sand castles</strong>.
+            Walk into a castle to collect it and reveal one hidden character.
+        </p>
+
+        <p>
+            The playground also contains <strong>portals</strong>.
+            Matching letters show which portal connects to which.
+            <strong>Purple = IN</strong> and <strong>blue = OUT</strong>.
+        </p>
+
+        <p>
+            After you collect every castle, you will be asked to solve the secret.
+            The answer can be a <strong>word</strong>, a <strong>phrase</strong>,
+            or a <strong>name</strong>.
+        </p>
+
+        <p>
+            Move with <strong>Arrow Keys</strong> or <strong>WASD</strong>.
+            Press <strong>SPACE</strong> to pause or resume.
+        </p>
+
+        <button id="close-help">
+            GOT IT
+        </button>
+    </div>
 </div>
 
 <!-- ======================================================
@@ -878,10 +941,6 @@ ROOT.dataset.ready = "1";
 
 const CURRENT_USER = __CURRENT_USER_JSON__;
 
-const statGamesEl = document.getElementById("stat-games");
-const statWinsEl = document.getElementById("stat-wins");
-const statWordsEl = document.getElementById("stat-words");
-
 function statsStorageKey() {
     return `kinetic_game_stats_${CURRENT_USER}`;
 }
@@ -960,11 +1019,6 @@ function updateAllPlayerScoreboard() {
 }
 
 function updateScoreboard() {
-    statGamesEl.textContent = playerStats.games;
-    statWinsEl.textContent = playerStats.wins;
-    statWordsEl.textContent =
-        `${playerStats.winningWords.length}/${WORD_OPTIONS.length}`;
-
     updateAllPlayerScoreboard();
 }
 
@@ -1294,6 +1348,21 @@ const gameArea =
 const startGameButton =
     document.getElementById(
         "start-game"
+    );
+
+const helpGameButton =
+    document.getElementById(
+        "help-game"
+    );
+
+const helpModal =
+    document.getElementById(
+        "help-modal"
+    );
+
+const closeHelpButton =
+    document.getElementById(
+        "close-help"
     );
 
 /* ============================================================
@@ -4071,6 +4140,44 @@ document
 
         }
     );
+
+helpGameButton.addEventListener(
+    "click",
+    () => {
+        helpModal.style.display = "flex";
+    }
+);
+
+closeHelpButton.addEventListener(
+    "click",
+    () => {
+        helpModal.style.display = "none";
+        ROOT.focus();
+    }
+);
+
+helpModal.addEventListener(
+    "click",
+    (event) => {
+        if (event.target === helpModal) {
+            helpModal.style.display = "none";
+            ROOT.focus();
+        }
+    }
+);
+
+document.addEventListener(
+    "keydown",
+    (event) => {
+        if (
+            event.key === "Escape" &&
+            helpModal.style.display === "flex"
+        ) {
+            helpModal.style.display = "none";
+            ROOT.focus();
+        }
+    }
+);
 
 startGameButton.addEventListener(
     "click",
