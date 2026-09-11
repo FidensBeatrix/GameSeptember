@@ -3,6 +3,39 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 # ============================================================
+# SUPABASE CONFIG
+# ============================================================
+def get_supabase_public_config():
+    """
+    Return only the browser-safe Supabase connection values.
+
+    IMPORTANT:
+    - The publishable/anon key is safe to expose to the browser.
+    - A secret/service-role key must NEVER be injected into GAME_HTML.
+    """
+    try:
+        cfg = st.secrets["supabase"]
+        url = str(cfg.get("url", "")).strip()
+
+        public_key = str(
+            cfg.get("publishable_key", "")
+            or cfg.get("anon_key", "")
+        ).strip()
+
+        # Backward-compatible fallback only when `key` is already a
+        # browser-safe publishable/anon key. Never expose sb_secret_*.
+        if not public_key:
+            fallback = str(cfg.get("key", "")).strip()
+            if fallback and not fallback.startswith("sb_secret_"):
+                public_key = fallback
+
+        return url, public_key
+    except Exception:
+        return "", ""
+
+SUPABASE_URL, SUPABASE_PUBLIC_KEY = get_supabase_public_config()
+
+# ============================================================
 # PAGE CONFIG
 # ============================================================
 st.set_page_config(
@@ -716,22 +749,34 @@ GAME_HTML = r"""
         </thead>
         <tbody>
             <tr>
+                <td>Bubbly</td>
+                <td id="all-Bubbly-games">0</td>
+                <td id="all-Bubbly-wins">0</td>
+                <td id="all-Bubbly-words">0/3</td>
+            </tr>
+            <tr>
                 <td>Tester1</td>
                 <td id="all-Tester1-games">0</td>
                 <td id="all-Tester1-wins">0</td>
                 <td id="all-Tester1-words">0/3</td>
             </tr>
             <tr>
-                <td>Miso</td>
-                <td id="all-Miso-games">0</td>
-                <td id="all-Miso-wins">0</td>
-                <td id="all-Miso-words">0/3</td>
+                <td>Tester2</td>
+                <td id="all-Tester2-games">0</td>
+                <td id="all-Tester2-wins">0</td>
+                <td id="all-Tester2-words">0/3</td>
             </tr>
             <tr>
-                <td>Bubbly</td>
-                <td id="all-Bubbly-games">0</td>
-                <td id="all-Bubbly-wins">0</td>
-                <td id="all-Bubbly-words">0/3</td>
+                <td>Tester3</td>
+                <td id="all-Tester3-games">0</td>
+                <td id="all-Tester3-wins">0</td>
+                <td id="all-Tester3-words">0/3</td>
+            </tr>
+            <tr>
+                <td>Tester4</td>
+                <td id="all-Tester4-games">0</td>
+                <td id="all-Tester4-wins">0</td>
+                <td id="all-Tester4-words">0/3</td>
             </tr>
         </tbody>
     </table>
@@ -944,64 +989,123 @@ if (
 ROOT.dataset.ready = "1";
 
 const CURRENT_USER = __CURRENT_USER_JSON__;
+const SUPABASE_URL = __SUPABASE_URL_JSON__;
+const SUPABASE_PUBLIC_KEY = __SUPABASE_PUBLIC_KEY_JSON__;
 
-function statsStorageKey() {
-    return `kinetic_game_stats_${CURRENT_USER}`;
+const KNOWN_PLAYERS = [
+    "Bubbly",
+    "Tester1",
+    "Tester2",
+    "Tester3",
+    "Tester4"
+];
+
+function emptyStats() {
+    return { games: 0, wins: 0, winningWords: [] };
 }
 
-function loadPlayerStats() {
-    try {
-        const raw = localStorage.getItem(statsStorageKey());
+function normaliseStats(row) {
+    return {
+        games: Number(row?.games || 0),
+        wins: Number(row?.wins || 0),
+        winningWords: Array.isArray(row?.solved_words)
+            ? row.solved_words
+            : []
+    };
+}
 
-        if (!raw) {
-            return { games: 0, wins: 0, winningWords: [] };
+let playerStats = emptyStats();
+let allPlayerStats = {};
+let supabaseReady = Boolean(SUPABASE_URL && SUPABASE_PUBLIC_KEY);
+let initialStatsLoaded = false;
+let initialStatsPromise = null;
+
+function supabaseHeaders(extra = {}) {
+    return {
+        // New Supabase publishable keys belong in the apikey header.
+        "apikey": SUPABASE_PUBLIC_KEY,
+        ...extra
+    };
+}
+
+async function fetchAllPlayerStats() {
+    if (!supabaseReady) return {};
+
+    const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/game_stats?select=username,games,wins,solved_words`,
+        {
+            method: "GET",
+            headers: supabaseHeaders({
+                "Accept": "application/json"
+            })
         }
+    );
 
-        const parsed = JSON.parse(raw);
-
-        return {
-            games: Number(parsed.games || 0),
-            wins: Number(parsed.wins || 0),
-            winningWords: Array.isArray(parsed.winningWords)
-                ? parsed.winningWords
-                : []
-        };
-    } catch (err) {
-        return { games: 0, wins: 0, winningWords: [] };
+    if (!response.ok) {
+        throw new Error(`Supabase read failed: ${response.status}`);
     }
+
+    const rows = await response.json();
+    const result = {};
+
+    for (const row of rows) {
+        result[row.username] = normaliseStats(row);
+    }
+
+    return result;
 }
 
-let playerStats = loadPlayerStats();
+async function ensurePlayerStatsLoaded() {
+    if (initialStatsLoaded) return;
 
-const KNOWN_PLAYERS = ["Tester1", "Miso", "Bubbly"];
+    if (!initialStatsPromise) {
+        initialStatsPromise = (async () => {
+            try {
+                const remoteStats = await fetchAllPlayerStats();
+                allPlayerStats = remoteStats;
 
-function loadStatsForUser(username) {
+                if (allPlayerStats[CURRENT_USER]) {
+                    playerStats = {
+                        games: allPlayerStats[CURRENT_USER].games,
+                        wins: allPlayerStats[CURRENT_USER].wins,
+                        winningWords: [
+                            ...allPlayerStats[CURRENT_USER].winningWords
+                        ]
+                    };
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                initialStatsLoaded = true;
+            }
+        })();
+    }
+
+    await initialStatsPromise;
+}
+
+async function updateAllPlayerScoreboard() {
     try {
-        const raw = localStorage.getItem(
-            `kinetic_game_stats_${username}`
-        );
+        const remoteStats = await fetchAllPlayerStats();
 
-        if (!raw) {
-            return { games: 0, wins: 0, winningWords: [] };
+        if (Object.keys(remoteStats).length) {
+            allPlayerStats = remoteStats;
         }
+        initialStatsLoaded = true;
 
-        const parsed = JSON.parse(raw);
-
-        return {
-            games: Number(parsed.games || 0),
-            wins: Number(parsed.wins || 0),
-            winningWords: Array.isArray(parsed.winningWords)
-                ? parsed.winningWords
-                : []
-        };
+        if (allPlayerStats[CURRENT_USER]) {
+            playerStats = {
+                games: allPlayerStats[CURRENT_USER].games,
+                wins: allPlayerStats[CURRENT_USER].wins,
+                winningWords: [...allPlayerStats[CURRENT_USER].winningWords]
+            };
+        }
     } catch (err) {
-        return { games: 0, wins: 0, winningWords: [] };
+        console.error(err);
     }
-}
 
-function updateAllPlayerScoreboard() {
     for (const username of KNOWN_PLAYERS) {
-        const stats = loadStatsForUser(username);
+        const stats = allPlayerStats[username] || emptyStats();
 
         const gamesEl = document.getElementById(
             `all-${username}-games`
@@ -1026,32 +1130,79 @@ function updateScoreboard() {
     updateAllPlayerScoreboard();
 }
 
-function savePlayerStats() {
-    try {
-        localStorage.setItem(
-            statsStorageKey(),
-            JSON.stringify(playerStats)
-        );
-    } catch (err) {
-        // Keep the game playable if browser storage is unavailable.
+async function savePlayerStats() {
+    allPlayerStats[CURRENT_USER] = {
+        games: playerStats.games,
+        wins: playerStats.wins,
+        winningWords: [...playerStats.winningWords]
+    };
+
+    // Update the UI immediately, then persist online.
+    for (const username of KNOWN_PLAYERS) {
+        const stats = allPlayerStats[username] || emptyStats();
+        const gamesEl = document.getElementById(`all-${username}-games`);
+        const winsEl = document.getElementById(`all-${username}-wins`);
+        const wordsEl = document.getElementById(`all-${username}-words`);
+
+        if (gamesEl) gamesEl.textContent = stats.games;
+        if (winsEl) winsEl.textContent = stats.wins;
+        if (wordsEl) {
+            wordsEl.textContent =
+                `${stats.winningWords.length}/${WORD_OPTIONS.length}`;
+        }
     }
 
-    updateScoreboard();
+    if (!supabaseReady) {
+        console.error("Supabase is not configured.");
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `${SUPABASE_URL}/rest/v1/game_stats?on_conflict=username`,
+            {
+                method: "POST",
+                headers: supabaseHeaders({
+                    "Content-Type": "application/json",
+                    "Prefer": "resolution=merge-duplicates,return=representation"
+                }),
+                body: JSON.stringify({
+                    username: CURRENT_USER,
+                    games: playerStats.games,
+                    wins: playerStats.wins,
+                    solved_words: playerStats.winningWords
+                })
+            }
+        );
+
+        if (!response.ok) {
+            const details = await response.text();
+            throw new Error(
+                `Supabase save failed: ${response.status} ${details}`
+            );
+        }
+    } catch (err) {
+        console.error(err);
+    }
 }
 
-function recordGameStart() {
+async function recordGameStart() {
+    // Never overwrite existing online history with zeros if the player
+    // clicks START before the first scoreboard request finishes.
+    await ensurePlayerStatsLoaded();
     playerStats.games += 1;
-    savePlayerStats();
+    await savePlayerStats();
 }
 
-function recordWin() {
+async function recordWin() {
+    await ensurePlayerStatsLoaded();
     playerStats.wins += 1;
 
     if (!playerStats.winningWords.includes(WORD)) {
         playerStats.winningWords.push(WORD);
     }
 
-    savePlayerStats();
+    await savePlayerStats();
 }
 
 const WORD_OPTIONS = [
@@ -1060,7 +1211,14 @@ const WORD_OPTIONS = [
     "P!nk"
 ];
 
+// Load the shared scoreboard from Supabase when the game opens.
 updateScoreboard();
+
+// Keep the scoreboard fresh if another player is playing elsewhere.
+setInterval(
+    updateAllPlayerScoreboard,
+    15000
+);
 
 let WORD = WORD_OPTIONS[0];
 let PLAYABLE_LETTERS = [];
@@ -4298,10 +4456,20 @@ resetGame(
 CURRENT_USER_JSON = json.dumps(
     st.session_state.get("username", "Player")
 )
+SUPABASE_URL_JSON = json.dumps(SUPABASE_URL)
+SUPABASE_PUBLIC_KEY_JSON = json.dumps(SUPABASE_PUBLIC_KEY)
 
-GAME_HTML_FOR_USER = GAME_HTML.replace(
-    "__CURRENT_USER_JSON__",
-    CURRENT_USER_JSON
+if not SUPABASE_URL or not SUPABASE_PUBLIC_KEY:
+    st.warning(
+        "Supabase scoreboard is not connected yet. Add `url` and "
+        "`publishable_key` under `[supabase]` in Streamlit Secrets."
+    )
+
+GAME_HTML_FOR_USER = (
+    GAME_HTML
+    .replace("__CURRENT_USER_JSON__", CURRENT_USER_JSON)
+    .replace("__SUPABASE_URL_JSON__", SUPABASE_URL_JSON)
+    .replace("__SUPABASE_PUBLIC_KEY_JSON__", SUPABASE_PUBLIC_KEY_JSON)
 )
 
 components.html(
