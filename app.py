@@ -686,6 +686,85 @@ GAME_HTML = r"""
         pointer;
 }
 
+
+/* =========================
+   WORD HINT
+   ========================= */
+
+#guess-actions {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+#guess-actions #guess-button {
+    margin-left: 0;
+}
+
+#hint-wrap {
+    position: relative;
+    display: inline-block;
+}
+
+#hint-button {
+    padding: 10px 15px;
+    border: 0;
+    border-radius: 7px;
+    color: white;
+    background: #7c3aed;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+#hint-button:hover {
+    background: #5b21b6;
+}
+
+#hint-box {
+    display: none;
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 10px);
+    transform: translateX(-50%);
+    width: min(300px, 76vw);
+    padding: 10px 12px;
+    border: 1px solid #a78bfa;
+    border-radius: 9px;
+    background: #1e1b4b;
+    color: #f8fafc;
+    font-size: 13px;
+    line-height: 1.4;
+    font-weight: 700;
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(0,0,0,.35);
+    z-index: 10000;
+}
+
+#hint-box::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 7px solid transparent;
+    border-top-color: #1e1b4b;
+}
+
+/* Desktop: hover reveals the hint. */
+@media (hover: hover) and (pointer: fine) {
+    #hint-wrap:hover #hint-box {
+        display: block;
+    }
+}
+
+/* Phone/tablet + click on desktop: toggle it explicitly. */
+#hint-wrap.hint-open #hint-box {
+    display: block;
+}
+
 #guess-feedback {
 
     min-height:
@@ -1114,9 +1193,18 @@ GAME_HTML = r"""
         placeholder="Type the hidden word or phrase..."
     />
 
-    <button id="guess-button">
-        GUESS
-    </button>
+    <div id="guess-actions">
+        <button id="guess-button">
+            GUESS
+        </button>
+
+        <span id="hint-wrap">
+            <button id="hint-button" type="button" aria-expanded="false">
+                💡 HINT
+            </button>
+            <span id="hint-box" role="tooltip"></span>
+        </span>
+    </div>
 
     <div id="guess-feedback">
     </div>
@@ -1385,6 +1473,23 @@ const WORD_OPTIONS = [
     "Res non verba",
     "P!nk"
 ];
+
+/*
+   Hints should point the player in the right direction without
+   spelling out the answer.
+*/
+const WORD_HINTS = {
+    "Testing":
+        "Something programmers, games and experiments do before everything is considered finished.",
+    "Res non verba":
+        "A Latin saying about actions carrying more weight than words.",
+    "P!nk":
+        "A famous singer whose stage name looks like a colour, but with a little punctuation twist."
+};
+
+function getCurrentHint() {
+    return WORD_HINTS[WORD] || "Think about what kind of word, phrase or name these letters could form.";
+}
 
 // Load the shared scoreboard from Supabase when the game opens.
 updateScoreboard();
@@ -1657,6 +1762,22 @@ const guessButton =
         "guess-button"
     );
 
+
+const hintWrap =
+    document.getElementById(
+        "hint-wrap"
+    );
+
+const hintButton =
+    document.getElementById(
+        "hint-button"
+    );
+
+const hintBox =
+    document.getElementById(
+        "hint-box"
+    );
+
 const guessFeedback =
     document.getElementById(
         "guess-feedback"
@@ -1919,6 +2040,16 @@ function resetGame(
 
     guessInput.value =
         "";
+
+    if (hintWrap) {
+        hintWrap.classList.remove("hint-open");
+    }
+    if (hintButton) {
+        hintButton.setAttribute("aria-expanded", "false");
+    }
+    if (hintBox) {
+        hintBox.textContent = "";
+    }
 
     render();
 
@@ -2900,6 +3031,17 @@ function sameCounts(
    ============================================================ */
 
 function showGuessPanel() {
+    if (hintBox) {
+        hintBox.textContent = getCurrentHint();
+    }
+    if (hintWrap) {
+        hintWrap.classList.remove("hint-open");
+    }
+    if (hintButton) {
+        hintButton.setAttribute("aria-expanded", "false");
+    }
+
+
 
     guessRule.textContent =
         `Use all ${PLAYABLE_LETTERS.length} characters to finish the game.`;
@@ -4737,6 +4879,27 @@ document
         "click",
         pauseGame
     );
+
+
+if (hintButton && hintWrap && hintBox) {
+    hintButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        hintBox.textContent = getCurrentHint();
+
+        const willOpen = !hintWrap.classList.contains("hint-open");
+        hintWrap.classList.toggle("hint-open", willOpen);
+        hintButton.setAttribute("aria-expanded", willOpen ? "true" : "false");
+    });
+
+    document.addEventListener("click", (event) => {
+        if (!hintWrap.contains(event.target)) {
+            hintWrap.classList.remove("hint-open");
+            hintButton.setAttribute("aria-expanded", "false");
+        }
+    });
+}
 
 guessButton.addEventListener(
     "click",
