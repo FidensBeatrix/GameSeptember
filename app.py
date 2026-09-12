@@ -698,7 +698,116 @@ GAME_HTML = r"""
         800;
 }
 
+
+/* =========================
+   MOBILE TOUCH CONTROLS
+   ========================= */
+
+.mobile-pad {
+    display: grid;
+    grid-template-columns: 64px 64px 64px;
+    grid-template-rows: 58px 58px 58px;
+    gap: 6px;
+    justify-content: center;
+}
+
+.mobile-move {
+    border: 0;
+    border-radius: 14px;
+    background: #7c3aed;
+    color: white;
+    font-size: 27px;
+    font-weight: 900;
+    line-height: 1;
+    box-shadow: 0 4px 0 #4c1d95;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-move:active,
+.mobile-move.pressed {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #4c1d95;
+    background: #5b21b6;
+}
+
+#move-up { grid-column: 2; grid-row: 1; }
+#move-left { grid-column: 1; grid-row: 2; }
+#move-down { grid-column: 2; grid-row: 2; }
+#move-right { grid-column: 3; grid-row: 2; }
+
+#mobile-hint {
+    text-align: center;
+    font-size: 11px;
+    opacity: .72;
+    margin-top: 7px;
+}
+
+
 @media (max-width: 700px) {
+
+    #ks-wrap {
+        width: 100%;
+        padding: 0 2px;
+        box-sizing: border-box;
+    }
+
+    #all-player-scoreboard {
+        width: 98%;
+        padding: 8px;
+        margin-bottom: 10px;
+    }
+
+    .all-score-table {
+        font-size: 10px;
+    }
+
+    #intro-panel {
+        margin: 10px auto;
+        padding: 18px 14px;
+        font-size: 15px;
+    }
+
+    #intro-title {
+        font-size: 22px;
+        margin-bottom: 10px;
+    }
+
+    #intro-text {
+        font-size: 15px;
+        line-height: 1.5;
+    }
+
+    #game {
+        width: 96vw;
+        max-width: 100%;
+        border-width: 2px;
+        touch-action: none;
+    }
+
+    #controls {
+        width: 98%;
+        gap: 6px;
+    }
+
+    #controls button {
+        min-width: 0;
+        flex: 1 1 30%;
+        padding: 9px 6px;
+        font-size: 12px;
+    }
+
+    #help {
+        font-size: 11px;
+        margin-top: 7px;
+    }
+
+    #help-card {
+        width: 94vw;
+        max-height: 86vh;
+        overflow-y: auto;
+        padding: 18px 16px;
+    }
 
     #ks-title {
 
@@ -909,9 +1018,62 @@ GAME_HTML = r"""
 
 </div>
 
+<!-- ALWAYS-VISIBLE MOVEMENT PAD: no mobile detection, no media query -->
+<div id="movement-pad"
+     style="
+        display:flex !important;
+        flex-direction:column !important;
+        align-items:center !important;
+        justify-content:center !important;
+        width:100% !important;
+        margin:12px auto 8px auto !important;
+        visibility:visible !important;
+        opacity:1 !important;
+        position:relative !important;
+        z-index:9999 !important;
+     ">
+    <div style="color:#ffd166;font-weight:900;font-size:13px;margin-bottom:7px;">
+        MOVE
+    </div>
+
+    <button class="mobile-move" id="move-up" aria-label="Move up"
+            style="display:block !important;width:74px !important;height:54px !important;
+                   min-width:74px !important;margin:0 0 7px 0 !important;
+                   background:#7c3aed !important;color:white !important;
+                   border:0 !important;border-radius:13px !important;
+                   font-size:27px !important;font-weight:900 !important;">▲</button>
+
+    <div style="display:flex !important;gap:8px !important;justify-content:center !important;">
+        <button class="mobile-move" id="move-left" aria-label="Move left"
+                style="display:block !important;width:74px !important;height:54px !important;
+                       min-width:74px !important;margin:0 !important;
+                       background:#7c3aed !important;color:white !important;
+                       border:0 !important;border-radius:13px !important;
+                       font-size:27px !important;font-weight:900 !important;">◀</button>
+
+        <button class="mobile-move" id="move-down" aria-label="Move down"
+                style="display:block !important;width:74px !important;height:54px !important;
+                       min-width:74px !important;margin:0 !important;
+                       background:#7c3aed !important;color:white !important;
+                       border:0 !important;border-radius:13px !important;
+                       font-size:27px !important;font-weight:900 !important;">▼</button>
+
+        <button class="mobile-move" id="move-right" aria-label="Move right"
+                style="display:block !important;width:74px !important;height:54px !important;
+                       min-width:74px !important;margin:0 !important;
+                       background:#7c3aed !important;color:white !important;
+                       border:0 !important;border-radius:13px !important;
+                       font-size:27px !important;font-weight:900 !important;">▶</button>
+    </div>
+
+    <div style="color:#f8fafc;font-size:11px;opacity:.78;margin-top:8px;text-align:center;">
+        Tap the arrows to move
+    </div>
+</div>
+
 <div id="help">
 
-    Move with Arrow Keys or WASD
+    Move with Arrow Keys / WASD / touch controls
     • SPACE pauses
     • Purple portal = IN
     • Blue portal = OUT
@@ -4282,6 +4444,171 @@ function keyHandler(e) {
 
 }
 
+
+/* ============================================================
+   MOBILE / TOUCH MOVEMENT
+   ============================================================ */
+function canAcceptMovement() {
+    return !(
+        state.gameOver ||
+        state.awaitingGuess ||
+        state.paused ||
+        state.countdownActive
+    );
+}
+
+function setTouchDirection(direction) {
+    if (!canAcceptMovement()) return;
+
+    // Copy the array so every input creates a fresh direction value.
+    state.nextDir = [direction[0], direction[1]];
+
+    // Some mobile browsers dislike focus({preventScroll:true}).
+    // Movement must still work even if focusing is unsupported.
+    try {
+        ROOT.focus({ preventScroll: true });
+    } catch (err) {
+        try { ROOT.focus(); } catch (_) {}
+    }
+}
+
+const touchDirections = {
+    "move-up": [-1, 0],
+    "move-down": [1, 0],
+    "move-left": [0, -1],
+    "move-right": [0, 1]
+};
+
+/*
+   Use BOTH touch and pointer/click events.
+   This is intentionally redundant because Streamlit runs the game inside
+   an iframe and mobile Safari/Chrome do not always deliver pointer events
+   consistently to buttons inside embedded components.
+*/
+Object.entries(touchDirections).forEach(([id, direction]) => {
+    const button = document.getElementById(id);
+    if (!button) return;
+
+    let lastTouchAt = 0;
+
+    const activate = (event) => {
+        if (event && event.cancelable) event.preventDefault();
+        button.classList.add("pressed");
+        setTouchDirection(direction);
+    };
+
+    const release = (event) => {
+        if (event && event.cancelable) event.preventDefault();
+        button.classList.remove("pressed");
+    };
+
+    button.addEventListener(
+        "touchstart",
+        (event) => {
+            lastTouchAt = Date.now();
+            activate(event);
+        },
+        { passive: false }
+    );
+    button.addEventListener("touchend", release, { passive: false });
+    button.addEventListener("touchcancel", release, { passive: false });
+
+    button.addEventListener("pointerdown", (event) => {
+        // Avoid double-firing when touchstart already handled the same tap.
+        if (Date.now() - lastTouchAt < 700) return;
+        activate(event);
+    });
+    button.addEventListener("pointerup", release);
+    button.addEventListener("pointercancel", release);
+    button.addEventListener("pointerleave", release);
+
+    button.addEventListener("click", (event) => {
+        // Click is a final fallback for browsers that suppress pointer events.
+        if (Date.now() - lastTouchAt < 700) {
+            if (event.cancelable) event.preventDefault();
+            return;
+        }
+        activate(event);
+        setTimeout(() => button.classList.remove("pressed"), 90);
+    });
+
+    button.addEventListener("contextmenu", event => event.preventDefault());
+});
+
+/* Swipe directly on the canvas. Direction is applied while moving,
+   not only after lifting the finger, so it feels responsive on phones. */
+let swipeStartX = null;
+let swipeStartY = null;
+let swipeHandled = false;
+const SWIPE_MIN = 18;
+
+function applySwipeFromPoint(clientX, clientY) {
+    if (swipeStartX === null || swipeStartY === null || swipeHandled) return;
+
+    const dx = clientX - swipeStartX;
+    const dy = clientY - swipeStartY;
+
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < SWIPE_MIN) return;
+
+    swipeHandled = true;
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+        setTouchDirection(dx > 0 ? [0, 1] : [0, -1]);
+    } else {
+        setTouchDirection(dy > 0 ? [1, 0] : [-1, 0]);
+    }
+}
+
+canvas.addEventListener(
+    "touchstart",
+    (event) => {
+        if (!event.touches || event.touches.length !== 1) return;
+        swipeStartX = event.touches[0].clientX;
+        swipeStartY = event.touches[0].clientY;
+        swipeHandled = false;
+        if (event.cancelable) event.preventDefault();
+    },
+    { passive: false }
+);
+
+canvas.addEventListener(
+    "touchmove",
+    (event) => {
+        if (!event.touches || event.touches.length !== 1) return;
+        applySwipeFromPoint(
+            event.touches[0].clientX,
+            event.touches[0].clientY
+        );
+        if (event.cancelable) event.preventDefault();
+    },
+    { passive: false }
+);
+
+canvas.addEventListener(
+    "touchend",
+    (event) => {
+        const touch = event.changedTouches && event.changedTouches[0];
+        if (touch) applySwipeFromPoint(touch.clientX, touch.clientY);
+
+        swipeStartX = null;
+        swipeStartY = null;
+        swipeHandled = false;
+
+        if (event.cancelable) event.preventDefault();
+    },
+    { passive: false }
+);
+
+canvas.addEventListener(
+    "touchcancel",
+    () => {
+        swipeStartX = null;
+        swipeStartY = null;
+        swipeHandled = false;
+    },
+    { passive: true }
+);
+
 /* ============================================================
    BUTTON LISTENERS
    ============================================================ */
@@ -4474,6 +4801,6 @@ GAME_HTML_FOR_USER = (
 
 components.html(
     GAME_HTML_FOR_USER,
-    height=825,
+    height=1050,
     scrolling=True
 )
