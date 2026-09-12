@@ -1071,7 +1071,7 @@ GAME_HTML = r"""
 
         <p>
             The playground also contains <strong>portals</strong>.
-            Matching letters show which portal connects to which.
+            Matching shapes show which portal connects to which.
             <strong>Purple = IN</strong> and <strong>blue = OUT</strong>.
         </p>
 
@@ -1548,6 +1548,13 @@ const BASE_PLAYER_START = [23, 2];
 const BASE_DINO_START = [1, 39];
 
 const PORTAL_LABELS = ["A", "B", "C", "D"];
+const PORTAL_SHAPES = {
+    A: "circle",
+    B: "triangle",
+    C: "square",
+    D: "diamond"
+};
+
 
 /*
    Portals are placed randomly every round.
@@ -3454,45 +3461,101 @@ function drawPortal(
         r * CELL +
         CELL / 2;
 
-    ctx.beginPath();
+    const shape =
+        PORTAL_SHAPES[label] || "circle";
 
-    ctx.arc(
-        cx,
-        cy,
-        14,
-        0,
-        Math.PI * 2
-    );
-
-    ctx.fillStyle =
-
+    const fillColor =
         entry
-
         ?
-
         "#7c3aed"
-
         :
-
         "#0284c7";
 
-    ctx.fill();
+    const borderColor =
+        entry
+        ?
+        "#e9d5ff"
+        :
+        "#bae6fd";
+
+    ctx.save();
+
+    ctx.fillStyle =
+        fillColor;
 
     ctx.strokeStyle =
-
-        entry
-
-        ?
-
-        "#e9d5ff"
-
-        :
-
-        "#bae6fd";
+        borderColor;
 
     ctx.lineWidth =
         3;
 
+    ctx.beginPath();
+
+    if (shape === "circle") {
+
+        ctx.arc(
+            cx,
+            cy,
+            13,
+            0,
+            Math.PI * 2
+        );
+
+    } else if (shape === "triangle") {
+
+        ctx.moveTo(
+            cx,
+            cy - 14
+        );
+
+        ctx.lineTo(
+            cx - 13,
+            cy + 11
+        );
+
+        ctx.lineTo(
+            cx + 13,
+            cy + 11
+        );
+
+        ctx.closePath();
+
+    } else if (shape === "square") {
+
+        ctx.rect(
+            cx - 12,
+            cy - 12,
+            24,
+            24
+        );
+
+    } else if (shape === "diamond") {
+
+        ctx.moveTo(
+            cx,
+            cy - 14
+        );
+
+        ctx.lineTo(
+            cx + 14,
+            cy
+        );
+
+        ctx.lineTo(
+            cx,
+            cy + 14
+        );
+
+        ctx.lineTo(
+            cx - 14,
+            cy
+        );
+
+        ctx.closePath();
+
+    }
+
+    ctx.fill();
     ctx.stroke();
 
     ctx.beginPath();
@@ -3500,48 +3563,31 @@ function drawPortal(
     ctx.arc(
         cx,
         cy,
-        9,
+        4.5,
         0,
         Math.PI * 2
     );
 
-    ctx.strokeStyle =
-        "white";
+    if (entry) {
 
-    ctx.lineWidth =
-        1;
+        ctx.fillStyle =
+            "white";
 
-    ctx.stroke();
+        ctx.fill();
 
-    ctx.textAlign =
-        "center";
+    } else {
 
-    ctx.fillStyle =
-        "white";
+        ctx.strokeStyle =
+            "white";
 
-    ctx.font =
-        "bold 12px Arial";
+        ctx.lineWidth =
+            2;
 
-    ctx.fillText(
-        label,
-        cx,
-        cy + 2
-    );
+        ctx.stroke();
 
-    ctx.font =
-        "bold 6px Arial";
+    }
 
-    ctx.fillText(
-        entry
-        ?
-        "IN"
-        :
-        "OUT",
-
-        cx,
-
-        cy + 11
-    );
+    ctx.restore();
 
 }
 
