@@ -1547,12 +1547,21 @@ const COLS = BASE_MAZE_STR[0].length;
 const BASE_PLAYER_START = [23, 2];
 const BASE_DINO_START = [1, 39];
 
-const BASE_PORTALS = {
-    A: [[1, 3], [23, 37]],
-    B: [[5, 38], [19, 2]],
-    C: [[17, 38], [3, 2]],
-    D: [[23, 20], [1, 20]]
-};
+const PORTAL_LABELS = ["A", "B", "C", "D"];
+
+/*
+   Portals are placed randomly every round.
+
+   Rules:
+   - only on walkable floor cells
+   - not too close to the player start
+   - not too close to the dinosaur start
+   - not too close to another portal
+   - the IN and OUT portal of the same pair should be well separated
+*/
+const PORTAL_MIN_START_DISTANCE = 5;
+const PORTAL_MIN_OTHER_DISTANCE = 6;
+const PORTAL_MIN_PAIR_DISTANCE = 12;
 
 const MAZE_VARIANTS = [
     "normal",
@@ -1595,6 +1604,120 @@ function buildMaze(variant) {
     return rows.map(row => [...row].map(Number));
 }
 
+function randomPortalPositions() {
+    const candidates = [];
+
+    for (let r = 1; r < ROWS - 1; r++) {
+        for (let c = 1; c < COLS - 1; c++) {
+            if (MAZE[r][c] !== 0) {
+                continue;
+            }
+
+            const p = [r, c];
+
+            if (samePos(p, PLAYER_START) || samePos(p, DINO_START)) {
+                continue;
+            }
+
+            if (manhattan(p, PLAYER_START) < PORTAL_MIN_START_DISTANCE) {
+                continue;
+            }
+
+            if (manhattan(p, DINO_START) < PORTAL_MIN_START_DISTANCE) {
+                continue;
+            }
+
+            candidates.push(p);
+        }
+    }
+
+    /*
+       Try many shuffled layouts until all 4 portal pairs satisfy
+       the spacing rules.
+    */
+    for (let attempt = 0; attempt < 800; attempt++) {
+        const pool = shuffle(candidates);
+        const chosen = [];
+        const result = {};
+        let failed = false;
+
+        for (const label of PORTAL_LABELS) {
+            let entry = null;
+            let exit = null;
+
+            for (const p of pool) {
+                if (
+                    chosen.every(
+                        other => manhattan(p, other) >= PORTAL_MIN_OTHER_DISTANCE
+                    )
+                ) {
+                    entry = p;
+                    break;
+                }
+            }
+
+            if (!entry) {
+                failed = true;
+                break;
+            }
+
+            chosen.push(entry);
+
+            for (const p of pool) {
+                if (chosen.some(other => samePos(p, other))) {
+                    continue;
+                }
+
+                if (manhattan(p, entry) < PORTAL_MIN_PAIR_DISTANCE) {
+                    continue;
+                }
+
+                if (
+                    chosen.every(
+                        other => manhattan(p, other) >= PORTAL_MIN_OTHER_DISTANCE
+                    )
+                ) {
+                    exit = p;
+                    break;
+                }
+            }
+
+            if (!exit) {
+                failed = true;
+                break;
+            }
+
+            chosen.push(exit);
+            result[label] = [
+                [...entry],
+                [...exit]
+            ];
+        }
+
+        if (!failed && Object.keys(result).length === PORTAL_LABELS.length) {
+            return result;
+        }
+    }
+
+    /*
+       Fallback: still random, but slightly relax the spacing so a
+       round can always start even after future maze changes.
+    */
+    const fallback = shuffle(candidates);
+    const result = {};
+    let index = 0;
+
+    for (const label of PORTAL_LABELS) {
+        result[label] = [
+            [...fallback[index]],
+            [...fallback[index + 1]]
+        ];
+        index += 2;
+    }
+
+    return result;
+}
+
 function applyRandomMaze() {
     CURRENT_MAZE_VARIANT =
         MAZE_VARIANTS[
@@ -1602,16 +1725,20 @@ function applyRandomMaze() {
         ];
 
     MAZE = buildMaze(CURRENT_MAZE_VARIANT);
-    PLAYER_START = transformPos(BASE_PLAYER_START, CURRENT_MAZE_VARIANT);
-    DINO_START = transformPos(BASE_DINO_START, CURRENT_MAZE_VARIANT);
 
-    PORTALS = {};
-    for (const [label, pair] of Object.entries(BASE_PORTALS)) {
-        PORTALS[label] = [
-            transformPos(pair[0], CURRENT_MAZE_VARIANT),
-            transformPos(pair[1], CURRENT_MAZE_VARIANT)
-        ];
-    }
+    PLAYER_START =
+        transformPos(
+            BASE_PLAYER_START,
+            CURRENT_MAZE_VARIANT
+        );
+
+    DINO_START =
+        transformPos(
+            BASE_DINO_START,
+            CURRENT_MAZE_VARIANT
+        );
+
+    PORTALS = randomPortalPositions();
 }
 
 /* ============================================================
