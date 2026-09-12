@@ -702,6 +702,14 @@ GAME_HTML = r"""
 /* =========================
    MOBILE TOUCH CONTROLS
    ========================= */
+#mobile-controls {
+    display: none;
+    margin: 10px auto 4px;
+    width: 210px;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+}
 
 .mobile-pad {
     display: grid;
@@ -743,6 +751,35 @@ GAME_HTML = r"""
     margin-top: 7px;
 }
 
+/*
+   Streamlit renders components inside an iframe. On some phones the iframe
+   reports a desktop-like width, so the max-width media query below may not
+   fire even though the device is touch-first. JavaScript adds .touch-ui to
+   #ks-root on touch/coarse-pointer devices; these rules make the D-pad visible
+   and apply the compact game controls independently of iframe width.
+*/
+#ks-root.touch-ui #mobile-controls {
+    display: block !important;
+}
+
+#ks-root.touch-ui #game {
+    width: 96vw;
+    max-width: 100%;
+    border-width: 2px;
+    touch-action: none;
+}
+
+#ks-root.touch-ui #controls {
+    width: 98%;
+    gap: 6px;
+}
+
+#ks-root.touch-ui #controls button {
+    min-width: 0;
+    flex: 1 1 30%;
+    padding: 9px 6px;
+    font-size: 12px;
+}
 
 @media (max-width: 700px) {
 
@@ -795,6 +832,10 @@ GAME_HTML = r"""
         flex: 1 1 30%;
         padding: 9px 6px;
         font-size: 12px;
+    }
+
+    #mobile-controls {
+        display: block;
     }
 
     #help {
@@ -1018,57 +1059,14 @@ GAME_HTML = r"""
 
 </div>
 
-<!-- ALWAYS-VISIBLE MOVEMENT PAD: no mobile detection, no media query -->
-<div id="movement-pad"
-     style="
-        display:flex !important;
-        flex-direction:column !important;
-        align-items:center !important;
-        justify-content:center !important;
-        width:100% !important;
-        margin:12px auto 8px auto !important;
-        visibility:visible !important;
-        opacity:1 !important;
-        position:relative !important;
-        z-index:9999 !important;
-     ">
-    <div style="color:#ffd166;font-weight:900;font-size:13px;margin-bottom:7px;">
-        MOVE
+<div id="mobile-controls" aria-label="Mobile movement controls">
+    <div class="mobile-pad">
+        <button class="mobile-move" id="move-up" aria-label="Move up">▲</button>
+        <button class="mobile-move" id="move-left" aria-label="Move left">◀</button>
+        <button class="mobile-move" id="move-down" aria-label="Move down">▼</button>
+        <button class="mobile-move" id="move-right" aria-label="Move right">▶</button>
     </div>
-
-    <button class="mobile-move" id="move-up" aria-label="Move up"
-            style="display:block !important;width:74px !important;height:54px !important;
-                   min-width:74px !important;margin:0 0 7px 0 !important;
-                   background:#7c3aed !important;color:white !important;
-                   border:0 !important;border-radius:13px !important;
-                   font-size:27px !important;font-weight:900 !important;">▲</button>
-
-    <div style="display:flex !important;gap:8px !important;justify-content:center !important;">
-        <button class="mobile-move" id="move-left" aria-label="Move left"
-                style="display:block !important;width:74px !important;height:54px !important;
-                       min-width:74px !important;margin:0 !important;
-                       background:#7c3aed !important;color:white !important;
-                       border:0 !important;border-radius:13px !important;
-                       font-size:27px !important;font-weight:900 !important;">◀</button>
-
-        <button class="mobile-move" id="move-down" aria-label="Move down"
-                style="display:block !important;width:74px !important;height:54px !important;
-                       min-width:74px !important;margin:0 !important;
-                       background:#7c3aed !important;color:white !important;
-                       border:0 !important;border-radius:13px !important;
-                       font-size:27px !important;font-weight:900 !important;">▼</button>
-
-        <button class="mobile-move" id="move-right" aria-label="Move right"
-                style="display:block !important;width:74px !important;height:54px !important;
-                       min-width:74px !important;margin:0 !important;
-                       background:#7c3aed !important;color:white !important;
-                       border:0 !important;border-radius:13px !important;
-                       font-size:27px !important;font-weight:900 !important;">▶</button>
-    </div>
-
-    <div style="color:#f8fafc;font-size:11px;opacity:.78;margin-top:8px;text-align:center;">
-        Tap the arrows to move
-    </div>
+    <div id="mobile-hint">Tap the arrows or swipe directly on the playground</div>
 </div>
 
 <div id="help">
@@ -1149,6 +1147,21 @@ if (
 }
 
 ROOT.dataset.ready = "1";
+
+/*
+   Detect touch-first devices directly instead of relying only on CSS viewport
+   width. Streamlit's component iframe can be wider than the actual phone
+   viewport, which previously kept the mobile D-pad hidden.
+*/
+const HAS_TOUCH_UI = Boolean(
+    (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) ||
+    ("ontouchstart" in window) ||
+    (window.matchMedia && window.matchMedia("(pointer: coarse)").matches)
+);
+
+if (HAS_TOUCH_UI) {
+    ROOT.classList.add("touch-ui");
+}
 
 const CURRENT_USER = __CURRENT_USER_JSON__;
 const SUPABASE_URL = __SUPABASE_URL_JSON__;
@@ -4801,6 +4814,6 @@ GAME_HTML_FOR_USER = (
 
 components.html(
     GAME_HTML_FOR_USER,
-    height=1050,
+    height=825,
     scrolling=True
 )
