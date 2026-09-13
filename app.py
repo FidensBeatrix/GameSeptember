@@ -2130,6 +2130,9 @@ function resetGame(
         gameOver:
             false,
 
+        eaten:
+            false,
+
         awaitingGuess:
             false,
 
@@ -2846,6 +2849,9 @@ function checkCollision() {
             state.dino
         )
     ) {
+
+        state.eaten =
+            true;
 
         state.gameOver =
             true;
@@ -4318,7 +4324,13 @@ function render() {
 
     drawDino();
 
-    drawPlayer();
+    /*
+       If the dinosaur catches the dog, the dog disappears from the maze
+       so it looks like the dinosaur actually ate it.
+    */
+    if (!state.eaten) {
+        drawPlayer();
+    }
 
     /* OVERLAYS */
 
