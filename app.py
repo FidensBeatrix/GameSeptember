@@ -4099,6 +4099,58 @@ function drawGuessOverlay() {
    WIN / DEATH OVERLAY
    ============================================================ */
 
+function getNewGameButtonRect() {
+
+    const w = 230;
+    const h = 54;
+
+    return {
+        x: canvas.width / 2 - w / 2,
+        y: canvas.height / 2 + 72,
+        w,
+        h
+    };
+
+}
+
+function drawNewGameButton() {
+
+    const button =
+        getNewGameButtonRect();
+
+    drawRect(
+        button.x,
+        button.y,
+        button.w,
+        button.h,
+        "#7c3aed",
+        "#c4b5fd",
+        3
+    );
+
+    ctx.textAlign =
+        "center";
+
+    ctx.textBaseline =
+        "middle";
+
+    ctx.fillStyle =
+        "white";
+
+    ctx.font =
+        "bold 22px Arial";
+
+    ctx.fillText(
+        "NEW GAME",
+        button.x + button.w / 2,
+        button.y + button.h / 2
+    );
+
+    ctx.textBaseline =
+        "alphabetic";
+
+}
+
 function drawEndOverlay() {
 
     const [
@@ -4106,21 +4158,9 @@ function drawEndOverlay() {
         cy
     ] =
         overlayBox(
-
             780,
-
-            220,
-
-            state.won
-
-            ?
-
-            "#22c55e"
-
-            :
-
-            "#22c55e"
-
+            300,
+            "#7c3aed"
         );
 
     ctx.textAlign =
@@ -4139,7 +4179,7 @@ function drawEndOverlay() {
         ctx.fillText(
             "🎉 CONGRATULATIONS! 🎉",
             cx,
-            cy - 42
+            cy - 76
         );
 
         ctx.fillStyle =
@@ -4151,7 +4191,7 @@ function drawEndOverlay() {
         ctx.fillText(
             WORD,
             cx,
-            cy + 24
+            cy - 14
         );
 
     }
@@ -4167,7 +4207,7 @@ function drawEndOverlay() {
         ctx.fillText(
             "🦖 NOM NOM NOM!",
             cx,
-            cy - 42
+            cy - 76
         );
 
         ctx.fillStyle =
@@ -4179,10 +4219,24 @@ function drawEndOverlay() {
         ctx.fillText(
             "You were delicious! 😋",
             cx,
-            cy + 18
+            cy - 18
         );
 
     }
+
+    drawNewGameButton();
+
+    ctx.fillStyle =
+        "#cbd5e1";
+
+    ctx.font =
+        "bold 16px Arial";
+
+    ctx.fillText(
+        "or press ENTER",
+        cx,
+        cy + 145
+    );
 
 }
 
@@ -4703,6 +4757,20 @@ function keyHandler(e) {
     ) {
 
         if (
+            e.key === "Enter"
+            &&
+            state.gameOver
+        ) {
+
+            e.preventDefault();
+
+            startNewGameFromEnd();
+
+            return;
+
+        }
+
+        if (
 
             e.key === "Enter"
 
@@ -4724,6 +4792,22 @@ function keyHandler(e) {
 
     const key =
         e.key.toLowerCase();
+
+    /* ENTER = NEW GAME after a win or after being eaten */
+
+    if (
+        key === "enter"
+        &&
+        state.gameOver
+    ) {
+
+        e.preventDefault();
+
+        startNewGameFromEnd();
+
+        return;
+
+    }
 
     /* SPACE = PAUSE */
 
@@ -4965,6 +5049,82 @@ canvas.addEventListener(
         swipeHandled = false;
     },
     { passive: true }
+);
+
+
+function startNewGameFromEnd() {
+
+    if (!state.gameOver) {
+        return;
+    }
+
+    recordGameStart();
+
+    resetGame(
+        true
+    );
+
+    try {
+        ROOT.focus();
+    } catch (err) {
+        // Focus is only a convenience; the new game still starts.
+    }
+
+}
+
+function canvasPointFromEvent(event) {
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+    return {
+        x:
+            (event.clientX - rect.left) *
+            (canvas.width / rect.width),
+
+        y:
+            (event.clientY - rect.top) *
+            (canvas.height / rect.height)
+    };
+
+}
+
+function newGameButtonHit(point) {
+
+    const button =
+        getNewGameButtonRect();
+
+    return (
+        point.x >= button.x &&
+        point.x <= button.x + button.w &&
+        point.y >= button.y &&
+        point.y <= button.y + button.h
+    );
+
+}
+
+canvas.addEventListener(
+    "click",
+    (event) => {
+
+        if (!state.gameOver) {
+            return;
+        }
+
+        const point =
+            canvasPointFromEvent(event);
+
+        if (
+            newGameButtonHit(point)
+        ) {
+
+            event.preventDefault();
+
+            startNewGameFromEnd();
+
+        }
+
+    }
 );
 
 /* ============================================================
