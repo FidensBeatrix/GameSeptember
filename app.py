@@ -981,31 +981,31 @@ GAME_HTML = r"""
                 <td>Bubbly</td>
                 <td id="all-Bubbly-games">0</td>
                 <td id="all-Bubbly-wins">0</td>
-                <td id="all-Bubbly-words">0/3</td>
+                <td id="all-Bubbly-words">0/7</td>
             </tr>
             <tr>
                 <td>Tester1</td>
                 <td id="all-Tester1-games">0</td>
                 <td id="all-Tester1-wins">0</td>
-                <td id="all-Tester1-words">0/3</td>
+                <td id="all-Tester1-words">0/7</td>
             </tr>
             <tr>
                 <td>Tester2</td>
                 <td id="all-Tester2-games">0</td>
                 <td id="all-Tester2-wins">0</td>
-                <td id="all-Tester2-words">0/3</td>
+                <td id="all-Tester2-words">0/7</td>
             </tr>
             <tr>
                 <td>Tester3</td>
                 <td id="all-Tester3-games">0</td>
                 <td id="all-Tester3-wins">0</td>
-                <td id="all-Tester3-words">0/3</td>
+                <td id="all-Tester3-words">0/7</td>
             </tr>
             <tr>
                 <td>Tester4</td>
                 <td id="all-Tester4-games">0</td>
                 <td id="all-Tester4-wins">0</td>
-                <td id="all-Tester4-words">0/3</td>
+                <td id="all-Tester4-words">0/7</td>
             </tr>
         </tbody>
     </table>
@@ -1469,9 +1469,13 @@ async function recordWin() {
 }
 
 const WORD_OPTIONS = [
-    "Testing",
-    "Res non verba",
-    "P!nk"
+    "Banana",
+    "Volcano",
+    "Carpe diem",
+    "Freddie Mercury",
+    "Grand Canyon",
+    "Plot twist",
+    "Christopher Nolan"
 ];
 
 /*
@@ -1479,12 +1483,26 @@ const WORD_OPTIONS = [
    spelling out the answer.
 */
 const WORD_HINTS = {
-    "Testing":
-        "Something programmers, games and experiments do before everything is considered finished.",
-    "Res non verba":
-        "A Latin saying about actions carrying more weight than words.",
-    "P!nk":
-        "A famous singer whose stage name looks like a colour, but with a little punctuation twist."
+    "Banana":
+        "A yellow fruit with its own natural wrapper.",
+
+    "Volcano":
+        "A mountain you really do not want to see having a bad day.",
+
+    "Carpe diem":
+        "A Latin saying encouraging you to make the most of the present.",
+
+    "Freddie Mercury":
+        "A legendary singer whose band had a very royal name.",
+
+    "Grand Canyon":
+        "A huge natural landmark in the United States, carved largely by a river.",
+
+    "Plot twist":
+        "A sudden story development that makes you reconsider what you thought was happening.",
+
+    "Christopher Nolan":
+        "A filmmaker known for playing rather enthusiastically with time and reality."
 };
 
 function getCurrentHint() {
